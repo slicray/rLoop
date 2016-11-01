@@ -54,6 +54,7 @@
 
 		}E_PWRNODE__INIT_STATES;
 
+		/** Max number of temperature sensors */
 		#define MAX_TEMP_SENSORS 540
 
 		/*******************************************************************************

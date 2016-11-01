@@ -22,8 +22,10 @@
 
 #if C_LOCALDEF__LCCM653__ENABLE_THIS_MODULE == 1U
 
-Lint16 temps[MAX_TEMP_SENSORS];
-Luint8 newTemps = 0;
+// buffer to hold temperatures collected from various sensors
+Lint16 u16temps[MAX_TEMP_SENSORS];
+// flag to set if new temperatures were collected; once these are TXed, flag is reset
+Luint8 u8newTemps = 0;
 
 /***************************************************************************//**
  * @brief
@@ -59,22 +61,22 @@ void vPWRNODE_BATTTEMP__Init(void)
  */
 void vPWRNODE_BATTTEMP__Process(void)
 {
-	Lint16 i;
+	Lint16 u16tempIndex;
 
 #ifndef WIN32
 	//process any search tasks
 	vDS18B20_ADDX__SearchSM_Process();
 #endif
 
-	//process getting temps from sensors
+	//process getting u16temps from sensors
 #ifndef WIN32
-	// TODO: collect all temperatures and set newTemps
+	// TODO: collect all temperatures and set u8newTemps
 #else
 	// make fake temperatures
-	newTemps = 1;
-	for (i = 0; i < MAX_TEMP_SENSORS; i++)
+	u8newTemps = 1;
+	for (u16tempIndex = 0; u16tempIndex < MAX_TEMP_SENSORS; u16tempIndex++)
 	{
-		temps[i] = i + 60;
+		u16temps[u16tempIndex] = u16tempIndex + 60;
 	}
 #endif
 
@@ -84,14 +86,14 @@ void vPWRNODE_BATTTEMP__Process(void)
 	{
 #endif
 		//process preparing frame to transmit temps to PI
-		if (newTemps)
+		if (u8newTemps)
 		{
 			rI2CTX_beginFrame();
-			for (i = 0; i < MAX_TEMP_SENSORS; i++) {
-				rI2CTX_addParameter_int16(i, t[i]);
+			for (u16tempIndex = 0; u16tempIndex < MAX_TEMP_SENSORS; u16tempIndex++) {
+				rI2CTX_addParameter_int16(u16tempIndex, u16temps[u16tempIndex]);
 			}
-			i = rI2CTX_endFrame();
-			newTemps = 0;
+			u16tempIndex = rI2CTX_endFrame();
+			u8newTemps = 0;
 		}
 #ifndef WIN32
 	}
