@@ -19,9 +19,11 @@
 
 
 #include "../power_core.h"
-#include "../rI2CTX.h"
 
 #if C_LOCALDEF__LCCM653__ENABLE_THIS_MODULE == 1U
+
+Lint16 temps[MAX_TEMP_SENSORS];
+Luint8 newTemps = 0;
 
 /***************************************************************************//**
  * @brief
@@ -57,8 +59,6 @@ void vPWRNODE_BATTTEMP__Init(void)
  */
 void vPWRNODE_BATTTEMP__Process(void)
 {
-	Lint8 bHaveTemps=0;
-	Lint16 t[540];
 	Lint16 i;
 
 #ifndef WIN32
@@ -66,25 +66,36 @@ void vPWRNODE_BATTTEMP__Process(void)
 	vDS18B20_ADDX__SearchSM_Process();
 #endif
 
+	//process getting temps from sensors
 #ifndef WIN32
-	// TODO: collect all temperatures and set bHaveTemps
+	// TODO: collect all temperatures and set newTemps
 #else
 	// make fake temperatures
-	bHaveTemps = 1;
-	for (i = 0; i < 540; i++)
+	newTemps = 1;
+	for (i = 0; i < MAX_TEMP_SENSORS; i++)
 	{
-		t[i] = i + 60;
+		temps[i] = i + 60;
 	}
 #endif
-	if (bHaveTemps)
+
+#ifndef WIN32
+	// check to see if uart transmission buffers are free'd up
+	if (u32RM4_SCI__Is_TxReady(SCI_CHANNEL__2))
 	{
-		// prepare frame to send all temperatures to ground station
-		rI2CTX_beginFrame();
-		for (i = 0; i < 540; i++) {
-			rI2CTX_addParameter_int16(i, t[i]);
+#endif
+		//process preparing frame to transmit temps to PI
+		if (newTemps)
+		{
+			rI2CTX_beginFrame();
+			for (i = 0; i < MAX_TEMP_SENSORS; i++) {
+				rI2CTX_addParameter_int16(i, t[i]);
+			}
+			i = rI2CTX_endFrame();
+			newTemps = 0;
 		}
-		i = rI2CTX_endFrame();
+#ifndef WIN32
 	}
+#endif
 }
 
 

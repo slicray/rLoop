@@ -19,12 +19,6 @@
 
 
 #include "../power_core.h"
-#include "../rI2CRX.h"
-#include "../rI2CTX.h"
-
-// buffer to receive data from UART port
-Luint8 rx_buffer[I2C_BUFFER_SIZE];
-Luint32 rx_buffer_len;
 
 #if C_LOCALDEF__LCCM653__ENABLE_THIS_MODULE == 1U
 
@@ -56,17 +50,26 @@ void vPWRNODE_COMM__ReceiveParam(struct rI2CRX_decParam decParam)
 void vPWRNODE_COMM__Process()
 {
 	//process RX
+	Luint8 rx_buffer[I2C_BUFFER_SIZE];
+	Luint32 rx_buffer_len;
+
 #ifndef WIN32
 	if (u32RM4_SCI__Is__RxReady(SCI_CHANNEL__2))
 	{
 		//get bytes from serial port
 		u8RM4_SCI__RxByteArray(SCI_CHANNEL__2, rx_buf_len, rx_buffer);
 	}
-
 #else
-	// TODO read from emulator
-	rx_buf_len = 1;
-	rx_buffer[0] = 5;
+	// make up a RX frame for emulator
+	rx_buf_len = 8;
+	rx_buffer[0] = I2C_CONTROL_CHAR;
+	rx_buffer[1] = I2C_FRAME_START;
+	rx_buffer[2] = 4; // frame length, 4 bytes
+	rx_buffer[3] = 0; // second digit of frame length
+	rx_buffer[4] = I2C_FRAME_START;
+	rx_buffer[5] = 5; // data we want to send
+	rx_buffer[6] = 0; // second digit of data
+	rx_buffer[7] = I2C_FRAME_END;
 #endif
 	//process bytes if there were any read
 	if (rx_buf_len > 0)
@@ -78,11 +81,9 @@ void vPWRNODE_COMM__Process()
 	if (rI2CTX_frameLength)
 	{
 #ifndef WIN32
-		if (u32RM4_SCI__Is_TxReady(SCI_CHANNEL__2))
-		{
-			// send bytes to serial port
-			vRM4_SCI__TxByteArray(SCI_CHANNEL__2, rI2CTX_frameLength, rI2CTX_buffer);
-		}
+		// send bytes to serial port
+		// no need to check if tx is ready since already did when preparing frame
+		vRM4_SCI__TxByteArray(SCI_CHANNEL__2, rI2CTX_frameLength, rI2CTX_buffer);
 #else
 		Lint32 i;
 		for (i = 0; i < rI2CTX_frameLength; i++)
@@ -92,6 +93,7 @@ void vPWRNODE_COMM__Process()
 			DEBUG_PRINT(ch);
 		}
 #endif
+		rI2CTX_frameLength = 0;
 	}
 
 }
@@ -101,8 +103,6 @@ void vPWRNODE_COMM__Init()
 	rI2CRX_begin();
 	//assigning callback required for rI2C RX. callback will happen when packet is received.
 	rI2CRX_recvDecParamCB = vPWRNODE_COMM__ReceiveParam; 
-	//reset rx buffer length
-	rx_buf_len = 0;
 }
 
 

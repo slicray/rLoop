@@ -9,6 +9,8 @@
 #ifndef _POWER_CORE_H_
 #define _POWER_CORE_H_
 	#include <localdef.h>
+	#include "../rI2CRX.h"
+	#include "../rI2CTX.h"
 	#if C_LOCALDEF__LCCM653__ENABLE_THIS_MODULE == 1U
 
 		/*******************************************************************************
@@ -52,7 +54,7 @@
 
 		}E_PWRNODE__INIT_STATES;
 
-
+		#define MAX_TEMP_SENSORS 540
 
 		/*******************************************************************************
 		Structures
@@ -112,6 +114,13 @@
 		void vPWRNODE_NODETEMP__Init(void);
 		void vPWRNODE_NODETEMP__Process(void);
 		Lfloat32 f32PWRNODE_NODETEMP__Get_Temperature_DegC(void);
+
+		//serial network layer
+		void vPWRNODE_COMM__Init(void);
+		void vPWRNODE_COMM__ReceiveParam(struct rI2CRX_decParam decParam);
+		void vPWRNODE_COMM__Process(void);
+
+
 
 #ifdef WIN32
 		void vPWRNODE_WIN32__Init(void);
