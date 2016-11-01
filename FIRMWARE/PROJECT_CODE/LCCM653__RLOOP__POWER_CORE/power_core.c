@@ -93,6 +93,10 @@ void vPWRNODE__Process(void)
 			//emit a message
 			DEBUG_PRINT("INIT_STATE__START");
 #endif
+
+			//Init serial network
+			vPWRNODE_COMM__Init();
+
 			//move to next state
 			sPWRNODE.sInit.sState = INIT_STATE__COMMS;
 
@@ -129,7 +133,7 @@ void vPWRNODE__Process(void)
 			//process the search
 			vPWRNODE_BATTTEMP__Process();
 
-			//check the satate
+			//check the state
 			u8Test = u8PWRNODE_BATTTEMP__Search_IsBusy();
 			if(u8Test == 1U)
 			{
@@ -185,6 +189,9 @@ void vPWRNODE__Process(void)
 
 			//process the TSYS01 device
 			vTSYS01__Process();
+
+			//process the communication
+			vPWRNODE_COMM__Process();
 
 			break;
 

@@ -19,6 +19,8 @@
 
 
 #include "../power_core.h"
+#include "../rI2CTX.h"
+
 #if C_LOCALDEF__LCCM653__ENABLE_THIS_MODULE == 1U
 
 /***************************************************************************//**
@@ -55,11 +57,37 @@ void vPWRNODE_BATTTEMP__Init(void)
  */
 void vPWRNODE_BATTTEMP__Process(void)
 {
+	Lint8 bHaveTemps=0;
+	Lint16 t[540];
+	Lint16 i;
+
 #ifndef WIN32
 	//process any search tasks
 	vDS18B20_ADDX__SearchSM_Process();
 #endif
+
+#ifndef WIN32
+	// TODO: collect all temperatures and set bHaveTemps
+#else
+	// make fake temperatures
+	bHaveTemps = 1;
+	for (i = 0; i < 540; i++)
+	{
+		t[i] = i + 60;
+	}
+#endif
+	if (bHaveTemps)
+	{
+		// prepare frame to send all temperatures to ground station
+		rI2CTX_beginFrame();
+		for (i = 0; i < 540; i++) {
+			rI2CTX_addParameter_int16(i, t[i]);
+		}
+		i = rI2CTX_endFrame();
+	}
 }
+
+
 
 
 /***************************************************************************//**
@@ -75,6 +103,7 @@ void vPWRNODE_BATTTEMP__Start_Search(void)
 	//start the search state machine
 	vDS18B20_ADDX__SearchSM_Start();
 #endif
+
 }
 
 
@@ -95,6 +124,9 @@ Luint8 u8PWRNODE_BATTTEMP__Search_IsBusy(void)
 	return 0U;
 #endif
 }
+
+
+
 
 #endif //#if C_LOCALDEF__LCCM653__ENABLE_THIS_MODULE == 1U
 //safetys
