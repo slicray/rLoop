@@ -27,7 +27,10 @@
 		/*******************************************************************************
 		Defines
 		*******************************************************************************/
-		#define C_MLP__MAX_AVERAGE_SIZE				(8U)
+		#define C_MLP__MAX_AVERAGE_SIZE							(8U)
+		#define FCU_BRAKE__MIN_BRAKES_POSITION_PERCENT			(0.0F)
+ 	 	#define FCU_BRAKE__MAX_BRAKES_POSITION_PERCENT			(100.0F)
+		#define FCU_BRAKE__BRAKES_POSITION_PERCENT_TO_DISTANCE	(0.229F)
 
 		/** Brakes states */
 		typedef enum
@@ -134,6 +137,10 @@
 
 				/** individual brake fault flags */
 				FAULT_TREE__PUBLIC_T sFaultFlags;
+
+				/** Extend and Retract limit switch flags  */
+				Luint8 u8ExtendLimitFlag;
+				Luint8 u8RetractLimitFlag;
 
 			}sBrakes[C_FCU__NUM_BRAKES];
 

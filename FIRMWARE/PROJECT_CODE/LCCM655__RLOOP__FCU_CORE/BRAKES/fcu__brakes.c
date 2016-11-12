@@ -154,17 +154,55 @@ void vFCU_BRAKES__Move_IBeam_Distance_Microns(Luint32 u32Distance)
 //some calibration will be needed here.
 void vFCU_BRAKES__Move_Percent_Position(Lfloat32 f32Percent, E_FCU__BRAKE_INDEX_T eBrake)
 {
-	if((f32Percent < 0) || (f32Percent > 100))
+	if (f32Percent < FCU_BRAKE__MIN_BRAKES_POSITION_PERCENT)
 	{
-		//do nothing
+		sFCU.sBrakes[(Luint32)eBrake].sMLP.f32BrakePosition_Percent = FCU_BRAKE__MIN_BRAKES_POSITION_PERCENT;
+	}
+	else if(f32Percent > FCU_BRAKE__MAX_BRAKES_POSITION_PERCENT)
+	{
+		sFCU.sBrakes[(Luint32)eBrake].sMLP.f32BrakePosition_Percent = FCU_BRAKE__MAX_BRAKES_POSITION_PERCENT;
 	}
 	else
 	{
-		if(eBrake < FCU_BRAKE__MAX_BRAKES)
-		{
-			//set BrakePosition_Percent to value
-			sFCU.sBrakes[(Luint32)eBrake].sMLP.f32BrakePosition_Percent = f32Percent;
-		}
+		//set BrakePosition_Percent to value
+		sFCU.sBrakes[(Luint32)eBrake].sMLP.f32BrakePosition_Percent = f32Percent;
+	}
+}
+
+/** Function to check limit switches
+ *  Check each of 2 limit switches. One limit switch is for max distance, one or min distance
+ *  If either of the limit switches == 1 (switched on), stop movement. Else, keep moving
+ */
+
+void vFCU_BRAKES__Check_Limit_Switches()
+{
+
+	//Check left brake limit switches
+	if (u8FCU_BRAKES_SW__Get_B0_Extend() == 1 )
+	{
+		sFCU.sBrakes[FCU_BRAKE__LEFT].u8ExtendLimitFlag = 1;
+	}
+	else if (u8FCU_BRAKES_SW__Get_B0_Retract() == 1)
+	{
+		sFCU.sBrakes[FCU_BRAKE__LEFT].u8RetractLimitFlag = 1;
+	}
+	else
+	{
+		//do nothing.
+	}
+
+	//Check right break limit switches
+	if (u8FCU_BRAKES_SW__Get_B1_Extend() == 1)
+	{
+		sFCU.sBrakes[FCU_BRAKE__RIGHT].u8ExtendLimitFlag = 1;
+	}
+	else if (u8FCU_BRAKES_SW__Get_B1_Retract() == 1)
+	{
+		sFCU.sBrakes[FCU_BRAKE__RIGHT].u8RetractLimitFlag = 1;
+	}
+	else
+	{
+		//do nothing.
 	}
 }
 
