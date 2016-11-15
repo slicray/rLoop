@@ -55,7 +55,8 @@ Lint16 s16AMC7812_I2C__TxCommand( Luint8 u8DeviceAddx, E_AMC7812_DAC_CONTROL_REG
 
 #ifndef WIN32
 	//tx only the command
-	s16Return = s16RM4_I2C_USER__TxReg(u8DeviceAddx, (Luint8)eRegister);
+	s16Return = s16RM4_I2C_USER__TxReg( u8DeviceAddx, (Luint8)eRegister );
+
 #else
 	//fake on win32
 	s16Return = 0;
@@ -66,7 +67,7 @@ Lint16 s16AMC7812_I2C__TxCommand( Luint8 u8DeviceAddx, E_AMC7812_DAC_CONTROL_REG
 
 
 
-/***************************************************************************//**
+/*****************************************************************************
  * @brief
  * Write a U16 to the ACM7812 DAC
  * 
@@ -80,7 +81,7 @@ Lint16 s16AMC7812_I2C__TxCommand( Luint8 u8DeviceAddx, E_AMC7812_DAC_CONTROL_REG
 Lint16 s16AMC7812_I2C__WriteU16( Luint8 u8DeviceAddx, Luint8 u8RegisterAddx, Luint16 u16Value )
 {
 
-	Luint8 u8Array[2];
+	Luint8 u8Array[2] = {0x0, 0x0};
 	Luint8 u8ArrayLength = 2U;
 	Lint16 s16Return  = 0;
 
@@ -91,14 +92,15 @@ Lint16 s16AMC7812_I2C__WriteU16( Luint8 u8DeviceAddx, Luint8 u8RegisterAddx, Lui
 	} unT2;
 
 
-	// write data to DAC 16-bit register as two bytes
 #ifndef WIN32
 
+	// convert 16-bit number to two-byte array
 	//Map
 	unT2.u8[1] = u8Array[0];
 	unT2.u8[0] = u8Array[1];
 	unT2.u16 = u16Value;
 
+	// write data to DAC register
 	s16Return = s16RM4_I2C_USER__TxByteArray( u8DeviceAddx, u8RegisterAddx, u8Array, u8ArrayLength );
 
 #else
@@ -125,7 +127,7 @@ Lint16 s16AMC7812_I2C__ReadU16(Luint8 u8DeviceAddx, Luint8 u8RegAddx, Luint16 *p
 
 //	*pu16Value = 0U;
 //	return 0;
-	Luint8 u8Array[2];
+//	Luint8 u8Array[2];
 	Lint16 s16Return = 0;
 
 	return s16Return;
