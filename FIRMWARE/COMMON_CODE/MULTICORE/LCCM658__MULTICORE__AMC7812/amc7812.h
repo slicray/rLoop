@@ -24,6 +24,7 @@
 
 
 		// enum type for THROTTLE DAC 16-bit data registers
+
 		typedef enum AMC7812_DAC_DATA_REG_ADDRESSES
 		{
 			AMC7812_DAC_DATA_REG_ADR__HE1 = 0x33,		// address for AMC7812 DAC-0-OUT pin register, DAC-1- to DAC-7-OUT pins follow in order (see Table 10 in AMC7812 Datasheet)
@@ -41,7 +42,8 @@
 			AMC7812_DAC_REG__RESET = 0x7C
 		} E_AMC7812_DAC_CONTROL_REG_ADDRESSES;
 
-		/** State types for the TSYS01 state machine */
+		// States for the AMC7812 DAC state machine
+
 		typedef enum
 		{
 
@@ -74,28 +76,34 @@
 		/*******************************************************************************
 		Structures
 		*******************************************************************************/
+
 		struct _strAMC7812_DAC
 		{
 
 			// the current state
+
 			E_AMC7812_DAC_STATES_T eState;
 
-			// counter the number of main program loops
+			// counter for the number of main program loops
+
 			Luint32 u32LoopCounter;
 
 			// address for DAC output data register
+
 			E_AMC7812_DAC_DATA_REG_ADDRESSES eDAC_Data_Addx;
 
-			// voltage limit
-			Luint16 u16Voltage_limit;
+			// DAC voltage limit
 
+			Luint16 u16Voltage_limit;
 
 		};
 
 		/*******************************************************************************
 		Function Prototypes
 		*******************************************************************************/
+
 		void vAMC7812__Init(void);
+
 //		void vAMC7812__Process(void);
 		Lint16 sAMC7812__Process( Luint16 u16ThrottleCommand, Luint8 u8EngineNumber );
 		
@@ -105,8 +113,10 @@
 		//I2C
 		void vAMC7812_I2C__Init(void);
 		
-		//DAC
+		// DAC
 		void vAMC7812_DAC__Init(void);
+		Lint16 s16AMC7812_I2C__WriteU16( Luint8 u8DeviceAddx, Luint8 u8RegisterAddx, Luint16 u16Value );
+		Lint16 s16AMC7812_I2C__TxCommand( Luint8 u8DeviceAddx, E_AMC7812_DAC_CONTROL_REG_ADDRESSES eRegister );
 		
 		//ADC
 		void vAMC7812_ADC__Init(void);
@@ -115,8 +125,6 @@
 		void vAMC7812_GPIO__Init(void);
 		
 
-		Lint16 s16AMC7812_I2C__WriteU16( Luint8 u8DeviceAddx, Luint8 u8RegisterAddx, Luint16 u16Value );
-		Lint16 s16AMC7812_I2C__TxCommand( Luint8 u8DeviceAddx, E_AMC7812_DAC_CONTROL_REG_ADDRESSES eRegister );
 
 
 	#endif //#if C_LOCALDEF__LCCM658__ENABLE_THIS_MODULE == 1U

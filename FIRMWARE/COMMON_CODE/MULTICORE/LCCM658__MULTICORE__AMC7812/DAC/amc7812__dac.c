@@ -38,7 +38,7 @@ extern struct _strAMC7812_DAC strAMC7812_DAC;
 void vAMC7812_DAC__Init(void)
 {
 
-	//structure init
+	// structure init
 	strAMC7812_DAC.eState = AMC7812_DAC_STATE__INIT_DEVICE;
 	strAMC7812_DAC.u32LoopCounter = 0U;
 	strAMC7812_DAC.u16Voltage_limit = (Luint16)DAC_OUT_MAX_MVOLTS;

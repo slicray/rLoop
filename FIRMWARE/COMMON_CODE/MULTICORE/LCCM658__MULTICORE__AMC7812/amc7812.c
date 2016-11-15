@@ -76,23 +76,27 @@ Lint16 vAMC7812__Process( Luint16 u16ThrottleCommand, Luint8 u8EngineNumber )
 			break;
 
 		case AMC7812_DAC_STATE__INIT_DEVICE:
+
 			// reset the device
 
-			// wait a little bit incase we came in from clocking out bad I2C data.
+			// wait in case we came in from clocking out bad I2C data
+
 			vRM4_DELAYS__Delay_mS(10U);
 
 			// AMC7812 must be reset after power up
+
 			s16Return = s16AMC7812_I2C__TxCommand( C_LOCALDEF__LCCM658__BUS_ADDX, AMC7812_DAC_REG__RESET );
 
 			if ( s16Return >= 0 )
 			{
-				//success
-				//change state
+				// reset successful, change state
+
 				strAMC7812_DAC.eState = AMC7812_DAC_STATE__WRITE;
 			}
 			else
 			{
-				// DAC error, change state
+				// reset failed, change state
+
 				strAMC7812_DAC.eState = AMC7812_DAC_STATE__ERROR;
 
 			}
@@ -103,6 +107,7 @@ Lint16 vAMC7812__Process( Luint16 u16ThrottleCommand, Luint8 u8EngineNumber )
 		case AMC7812_DAC_STATE__WRITE:
 
 			// get the address for the DAC output channel corresponding to HE number {u8EngineNumber}
+
 			switch ( u8EngineNumber )
 			{
 				case 1:
@@ -131,7 +136,8 @@ Lint16 vAMC7812__Process( Luint16 u16ThrottleCommand, Luint8 u8EngineNumber )
 					break;
 			}	// end of switch(u8EngineNumber)
 
-			// make sure the output value does not exceed the limit
+			// make sure the output value does not exceed the limit of the DAC
+
 			if ( u16ThrottleCommand > strAMC7812_DAC.u16Voltage_limit )
 			{
 				u16ThrottleCommand = strAMC7812_DAC.u16Voltage_limit;
@@ -139,36 +145,44 @@ Lint16 vAMC7812__Process( Luint16 u16ThrottleCommand, Luint8 u8EngineNumber )
 
 
 			// write the throttle value
+
 			s16Return = s16AMC7812_I2C__WriteU16( C_LOCALDEF__LCCM658__BUS_ADDX, strAMC7812_DAC.eDAC_Data_Addx, u16ThrottleCommand );
 
 			if ( s16Return >= 0 )
 			{
 				//sample started, wait for some processing loops to expire
 
-				//change state
+				// change state
+
 				strAMC7812_DAC.eState = AMC7812_DAC_STATE__WAIT_LOOPS;
 
 			}
 			else
 			{
-				// an error has occurred
+				// an error has occurred:
+
+				// change the state
+
 				strAMC7812_DAC.eState = AMC7812_DAC_STATE__ERROR;
+
 			}
 
 			break;
 
 		case AMC7812_DAC_STATE__WAIT_LOOPS:
 
-			//todo, change to constant
+			//
 			if ( strAMC7812_DAC.u32LoopCounter > C_LOCALDEF__LCCM658__NUM_CONVERSION_LOOPS )
 			{
 				// change state to write
+
 				strAMC7812_DAC.eState = AMC7812_DAC_STATE__WRITE;
 
 			}
 			else
 			{
-				// increment the loop counter;
+				// increment the loop counter
+
 				strAMC7812_DAC.u32LoopCounter += 1;
 
 			}
@@ -179,11 +193,12 @@ Lint16 vAMC7812__Process( Luint16 u16ThrottleCommand, Luint8 u8EngineNumber )
 
 
 		case AMC7812_DAC_STATE__ERROR:
+
 			// an error has occurred
 
 			break;
 
-	}
+	}	// end of switch ( strAMC7812_DAC.eState )
 
 	return s16Return;
 
