@@ -198,7 +198,7 @@ Lint16 s16AMC7812__DAC_Control( Luint8 u8Input )
 
 	// DAC DAV (data available - low when conversion ends)
 
-	// DAC CNVT (conversion trigger - falling edge starts sampling)
+	// DAC CNVT (conversion trigger )
 
 }
 
