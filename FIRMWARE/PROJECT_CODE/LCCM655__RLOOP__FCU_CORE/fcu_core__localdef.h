@@ -15,8 +15,32 @@ RLOOP - FLIGHT CONTROL UNIT - CORE
 	#define C_LOCALDEF__LCCM655__ENABLE_THIS_MODULE							(1U)
 	#if C_LOCALDEF__LCCM655__ENABLE_THIS_MODULE == 1U
 
+		/** Enable or disable the PiComms layer */
+		#define C_LOCALDEF__LCCM655__ENABLE_PI_COMMS						(1U)
 
-		#define C_LOCALDEF__LCCM655__EEPROM_OFFSET__BRAKES_HEADER				(20U)
+		/** Enable the OptoNCDT laser interface */
+		#define C_LOCALDEF__LCCM655__ENABLE_LASER_OPTONCDT					(1U)
+
+		/** Number of OptoNCDT lasers, must be in order from A0:2, B0:2*/
+		#define C_LOCALDEF__LCCM655__NUM_LASER_OPTONCDT						(1U)
+
+		/** Enable accel subsystem */
+		#define C_LOCALDEF__LCCM655__ENABLE_ACCEL							(0U)
+
+		/** Enable the braking subsystems */
+		#define C_LOCALDEF__LCCM655__ENABLE_BRAKES							(0U)
+
+		/** Enable the throttle control */
+		#define C_LOCALDEF__LCCM655__ENABLE_THROTTLE						(0U)
+
+		/** Enable the ASI_RS485 */
+		#define C_LOCALDEF__LCCM655__ENABLE_ASI_RS485						(0U)
+
+		/** Enable the pusher detection system */
+		#define C_LOCALDEF__LCCM655__ENABLE_PUSHER							(0U)
+
+
+		#define C_LOCALDEF__LCCM655__EEPROM_OFFSET__BRAKES_HEADER			(20U)
 		#define C_LOCALDEF__LCCM655__EEPROM_OFFSET__BRAKE0_ZERO				(21U)
 		#define C_LOCALDEF__LCCM655__EEPROM_OFFSET__BRAKE0_SPAN				(22U)
 		#define C_LOCALDEF__LCCM655__EEPROM_OFFSET__BRAKE1_ZERO				(23U)

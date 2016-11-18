@@ -21,6 +21,38 @@
 	}E_FCU__RUN_STATE_T;
 
 
+	/** Opto NCDT Laser processing subsystem state machine */
+	typedef enum
+	{
+
+		/** just come out of reset */
+		OPTOLASER_STATE__RESET = 0U,
+
+		/** configure the laser into RS422 mode */
+		OPTOLASER_STATE__INIT_LASER,
+
+		/** Wait until the laser has been initted */
+		OPTOLASER_STATE__WAIT_INIT_DONE,
+
+		/** Check if any new data is avail from the laser FIFO's */
+		OPTOLASER_STATE__CHECK_NEW_DATA,
+
+		/** Check if a new packet is avail for each laser */
+		OPTOLASER_STATE__CHECK_NEW_PACKET,
+
+	}E_FCU_OPTOLASER__STATE_T;
+
+	/** Rx state machine for the laser data from OptoNCDT*/
+	typedef enum
+	{
+		OPTONCDT_RX__BYTE_1 = 0U,
+		OPTONCDT_RX__BYTE_2,
+		OPTONCDT_RX__BYTE_3,
+
+	}E_OPTONCDT__RX_STATE_T;
+
+
+
 	/** Flight control state machine INIT types */
 	typedef enum
 	{

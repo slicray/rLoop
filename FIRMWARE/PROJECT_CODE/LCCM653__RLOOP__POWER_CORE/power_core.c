@@ -31,9 +31,17 @@ struct _strPWRNODE sPWRNODE;
  */
 void vPWRNODE__Init(void)
 {
+
+	//init the fault handling system
+	vPWRNODE_FAULTS__Init();
+
 	//setup the power node basic states and allow the process function to bring all the devices and
 	//subsystems on line.
-	sPWRNODE.sInit.sState = INIT_STATE__START;
+	sPWRNODE.sInit.eState = INIT_STATE__START;
+
+	//init the guarding systems
+	sPWRNODE.u32Guard1 = 0xABCD9876U;
+	sPWRNODE.u32Guard2 = 0x12983465U;
 
 }
 
@@ -64,7 +72,7 @@ void vPWRNODE__Process(void)
 	 }
 	 \enddot
 	 */
-	switch(sPWRNODE.sInit.sState)
+	switch(sPWRNODE.sInit.eState)
 	{
 
 		case INIT_STATE__UNKNOWN:
@@ -88,8 +96,10 @@ void vPWRNODE__Process(void)
 
 			//setup UART, SCI2 = Pi Connection
 			vRM4_SCI__Init(SCI_CHANNEL__2);
-			vRM4_SCI__Set_Baudrate(SCI_CHANNEL__2, 57600);
-
+			vRM4_SCI__Set_Baudrate(SCI_CHANNEL__2, 57600U);
+			//vRM4_SCI_HELPERS__DisplayText(SCI_CHANNEL__2, "LOK\r\n", 5U);
+			//vRM4_SCI_INT__Enable_Notification(SCI_CHANNEL__2, SCI_RX_INT);
+			//vRM4_SCI__TxByte(SCI_CHANNEL__2, 0xAAU);
 
 #else
 			//Init any win32 variables
@@ -101,13 +111,14 @@ void vPWRNODE__Process(void)
 
 			//start the pi comms layer
 			#if C_LOCALDEF__LCCM656__ENABLE_THIS_MODULE == 1U
-				#if C_LOCALDEF__LCCM652__ENABLE_PI_COMMS == 1U
+				#if C_LOCALDEF__LCCM653__ENABLE_PI_COMMS == 1U
 					vPWRNODE_PICOMMS__Init();
 				#endif
 			#endif
 
+
 			//move to next state
-			sPWRNODE.sInit.sState = INIT_STATE__COMMS;
+			sPWRNODE.sInit.eState = INIT_STATE__COMMS;
 
 			break;
 
@@ -124,14 +135,30 @@ void vPWRNODE__Process(void)
 #endif
 			//move to next state
 			//if we have the batt temp system enabled (DS18B20) then start the cell temp system
-			sPWRNODE.sInit.sState = INIT_STATE__CELL_TEMP_START;
+			sPWRNODE.sInit.eState = INIT_STATE__DC_CONVERTER;
 			break;
 
+		case INIT_STATE__DC_CONVERTER:
+
+			//make sure we latch on the DC/DC converter now.
+			#if C_LOCALDEF__LCCM653__ENABLE_DC_CONVERTER == 1U
+				vPWRNODE_DC__Init();
+			#endif
+
+			//do the charger too
+			#if C_LOCALDEF__LCCM653__ENABLE_CHARGER == 1U
+				vPWRNODE_CHG_RELAY__Init();
+			#endif
+
+			//move to next state
+			//if we have the batt temp system enabled (DS18B20) then start the cell temp system
+			sPWRNODE.sInit.eState = INIT_STATE__CELL_TEMP_START;
+			break;
 
 
 		case INIT_STATE__CELL_TEMP_START:
 
-			#if C_LOCALDEF__LCCM652__ENABLE_BATT_TEMP == 1U
+			#if C_LOCALDEF__LCCM653__ENABLE_BATT_TEMP == 1U
 				//start the battery temp system
 				vPWRNODE_BATTTEMP__Init();
 
@@ -140,12 +167,12 @@ void vPWRNODE__Process(void)
 			#endif
 
 			//start searching for temp sensors
-			sPWRNODE.sInit.sState = INIT_STATE__CELL_TEMP_SEARCH;
+			sPWRNODE.sInit.eState = INIT_STATE__CELL_TEMP_SEARCH;
 			break;
 
 
 		case INIT_STATE__CELL_TEMP_SEARCH:
-			#if C_LOCALDEF__LCCM652__ENABLE_BATT_TEMP == 1U
+			#if C_LOCALDEF__LCCM653__ENABLE_BATT_TEMP == 1U
 				//process the search
 				vPWRNODE_BATTTEMP__Process();
 
@@ -159,90 +186,120 @@ void vPWRNODE__Process(void)
 				else
 				{
 					//change state
-					sPWRNODE.sInit.sState = INIT_STATE__CELL_TEMP_SEARCH_DONE;
+					sPWRNODE.sInit.eState = INIT_STATE__CELL_TEMP_SEARCH_DONE;
 				}
 			#else
 				//if we don't have batt temp enabled, move states
-				sPWRNODE.sInit.sState = INIT_STATE__CELL_TEMP_SEARCH_DONE;
+				sPWRNODE.sInit.eState = INIT_STATE__CELL_TEMP_SEARCH_DONE;
 			#endif
 
 			break;
 
 
 		case INIT_STATE__CELL_TEMP_SEARCH_DONE:
-			#if C_LOCALDEF__LCCM652__ENABLE_BATT_TEMP == 1U
+			#if C_LOCALDEF__LCCM653__ENABLE_BATT_TEMP == 1U
 			//done searching 1-wire interface,
 
 			//todo, handle any results from the search
 			#endif
 
 			//next get the BMS going
-			sPWRNODE.sInit.sState = INIT_STATE__BMS;
+			sPWRNODE.sInit.eState = INIT_STATE__BMS;
 			break;
-
 
 
 		case INIT_STATE__BMS:
 
 			//init the BMS layer
-			#if C_LOCALDEF__LCCM652__ENABLE_BMS == 1U
+			#if C_LOCALDEF__LCCM653__ENABLE_BMS == 1U
 				vPWRNODE_BMS__Init();
 			#endif
 
 			//start the TSYS01 temp sensor
-			sPWRNODE.sInit.sState = INIT_STATE__TSYS01;
+			sPWRNODE.sInit.eState = INIT_STATE__TSYS01;
 			break;
 
 
 		case INIT_STATE__TSYS01:
 
-			#if C_LOCALDEF__LCCM652__ENABLE_NODE_TEMP == 1U
+			#if C_LOCALDEF__LCCM653__ENABLE_NODE_TEMP == 1U
 				// Init the node temp subsystem
 				vPWRNODE_NODETEMP__Init();
 			#endif
 
 			//Start the node pressure system
-			sPWRNODE.sInit.sState = INIT_STATE__MS5607;
+			sPWRNODE.sInit.eState = INIT_STATE__MS5607;
 			break;
 
 		case INIT_STATE__MS5607:
-			#if C_LOCALDEF__LCCM652__ENABLE_NODE_TEMP == 1U
-				// Init the node temp subsystem
-				vPWRNODE_NODETEMP__Init();
+			#if C_LOCALDEF__LCCM653__ENABLE_NODE_PRESS == 1U
+				// Init the node pressure subsystem
+				vPWRNODE_NODEPRESS__Init();
 			#endif
 
 			//change to run state
-			sPWRNODE.sInit.sState = INIT_STATE__RUN;
+			sPWRNODE.sInit.eState = INIT_STATE__START_TIMERS;
 			break;
 
+
+		case INIT_STATE__START_TIMERS:
+
+			//start the relevant RTI interrupts going.
+			//100ms timer
+			vRTI_COMPARE__Enable_CompareInterrupt(0);
+			//10ms timer
+			vRTI_COMPARE__Enable_CompareInterrupt(1);
+
+			//int the RTI
+			vRM4_RTI__Init();
+			vRM4_RTI_ISR__Enable_Interrupts();
+			//Starts the counter zero
+			vRM4_RTI__Start_Counter(0);
+
+			//move state
+			sPWRNODE.sInit.eState = INIT_STATE__RUN;
+			break;
 
 		case INIT_STATE__RUN:
 
 			//normal run state
 			#if C_LOCALDEF__LCCM656__ENABLE_THIS_MODULE == 1U
-				#if C_LOCALDEF__LCCM652__ENABLE_PI_COMMS == 1U
+				#if C_LOCALDEF__LCCM653__ENABLE_PI_COMMS == 1U
 					vPWRNODE_PICOMMS__Process();
 				#endif
 			#endif
 
-			//process any BMS tasks
-			#if C_LOCALDEF__LCCM652__ENABLE_BMS == 1U
-					vPWRNODE_BMS__Process();
+			//process the DC/DC conveter, may need to pet the watchdog, etc
+			#if C_LOCALDEF__LCCM653__ENABLE_DC_CONVERTER == 1U
+				vPWRNODE_DC__Process();
 			#endif
 
-			#if C_LOCALDEF__LCCM652__ENABLE_BATT_TEMP == 1U
+			//do the charger too
+			#if C_LOCALDEF__LCCM653__ENABLE_CHARGER == 1U
+				vPWRNODE_CHG_RELAY__Process();
+			#endif
+
+			//process any BMS tasks
+			#if C_LOCALDEF__LCCM653__ENABLE_BMS == 1U
+				vPWRNODE_BMS__Process();
+			#endif
+
+			#if C_LOCALDEF__LCCM653__ENABLE_BATT_TEMP == 1U
 				//process the DS18B20 1-wire subsystem
 				vPWRNODE_BATTTEMP__Process();
 			#endif
 
-			#if C_LOCALDEF__LCCM652__ENABLE_NODE_TEMP == 1U
+			#if C_LOCALDEF__LCCM653__ENABLE_NODE_TEMP == 1U
 				// Process the node temp subsystem
 				vPWRNODE_NODETEMP__Process();
 			#endif
-			#if C_LOCALDEF__LCCM652__ENABLE_NODE_PRESS == 1U
+			#if C_LOCALDEF__LCCM653__ENABLE_NODE_PRESS == 1U
 				// Process the node pressure subsystem
 				vPWRNODE_NODEPRESS__Process();
 			#endif
+
+			//process the main state machine
+			vPWRNODE_SM__Process();
 
 		break;
 
@@ -252,12 +309,30 @@ void vPWRNODE__Process(void)
 			//todo:
 			break;
 
-	}//switch(sPWRNODE.sInit.sState)
+	}//switch(sPWRNODE.sInit.eState)
 
 
 }
 
+//100ms timer
+void vPWRNODE__RTI_100MS_ISR(void)
+{
+	#if C_LOCALDEF__LCCM653__ENABLE_PI_COMMS == 1U
+		vPWRNODE_PICOMMS__100MS_ISR();
+	#endif
 
+	#if C_LOCALDEF__LCCM653__ENABLE_DC_CONVERTER == 1U
+		//tell the DC/DC converter about us for pod safe command.
+		vPWRNODE_DC__100MS_ISR();
+	#endif
+
+}
+
+//10ms timer
+void vPWRNODE__RTI_10MS_ISR(void)
+{
+
+}
 
 #endif //#if C_LOCALDEF__LCCM653__ENABLE_THIS_MODULE == 1U
 //safetys

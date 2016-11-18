@@ -20,6 +20,10 @@
 #include "../power_core.h"
 #if C_LOCALDEF__LCCM653__ENABLE_THIS_MODULE == 1U
 
+extern struct _strPWRNODE sPWRNODE;
+
+Luint8 u8TestMsg[] = {0xD5, 0xD0, 0x00, 0x0D, 0xD5, 0xD3, 0x43, 0x00, 0x05, 0x40, 0x49, 0x0F, 0xD0, 0xD5, 0xD8, 0x9E, 0x00};
+
 
 /***************************************************************************//**
  * @brief
@@ -31,6 +35,39 @@
 void vPWRNODE_SM__Init(void)
 {
 
+	//init
+	sPWRNODE.eMainState = RUN_STATE__RESET;
+
+}
+
+//process
+void vPWRNODE_SM__Process(void)
+{
+	Luint8 u8Counter;
+
+	switch(sPWRNODE.eMainState)
+	{
+		case RUN_STATE__RESET:
+			//we have just reset
+			sPWRNODE.eMainState = RUN_STATE__TEST;
+			break;
+
+		case RUN_STATE__IDLE:
+
+			break;
+
+		case RUN_STATE__TEST:
+
+			//test a message into the Rx unit.
+			for(u8Counter = 0U; u8Counter < 17U; u8Counter++)
+			{
+				vPICOMMS_RX__Receive_Bytes(&u8TestMsg[u8Counter], 1);
+			}
+
+			sPWRNODE.eMainState = RUN_STATE__IDLE;
+			break;
+
+	}//switch(sPWRNODE.eMainState)
 
 }
 

@@ -3,13 +3,15 @@
  * @brief		Main header file for pi comms
  * @author		Lachlan Grogan
  * @copyright	rLoop Inc.
- * @st_fileID	LCCM656R0.FILE.001
  */
 
 #ifndef _PI_COMMS_H_
 #define _PI_COMMS_H_
 	#include <localdef.h>
 	#if C_LOCALDEF__LCCM656__ENABLE_THIS_MODULE == 1U
+
+		//our default packet types.
+		#include <LCCM656__RLOOP__PI_COMMS/pi_comms__packet_types.h>
 
 		/*******************************************************************************
 		Defines
@@ -50,10 +52,6 @@
 			PICOMMS_DOUBLE = 0x83
 		};
 
-		void vPICOMMS_Init();
-
-		void PICOMMS_RX_Init();
-		void PICOMMS_RX_receiveBytes(Luint8* data, Luint16 length);
 
 		/*******************************************************************************
 		Structures
@@ -77,9 +75,23 @@
 				Luint8 PICOMMS_TX_buffer[RPOD_PICOMMS_BUFFER_SIZE] __attribute__((aligned(0x04)));
 				Luint16 PICOMMS_TX_bufferPos;
 				Luint16 PICOMMS_TX_frameLength;
-				Luint8 checksum;
+				Luint8 u8Checksum;
 				
 			}sTx;
+
+			/** Receive side */
+			struct
+			{
+
+				Luint8 u8Buffer[RPOD_PICOMMS_BUFFER_SIZE] __attribute__((aligned(0x04)));
+				Luint16 bufferBegin;
+				Luint16 bufferLength;
+				Luint8 u8TempFrameBuffer[RPOD_PICOMMS_BUFFER_SIZE] __attribute__((aligned(0x04)));
+
+				//quick and nasty fault counter
+				Luint32 u32Faults;
+
+			}sRx;
 
 			struct
 			{
@@ -103,25 +115,32 @@
 		/*******************************************************************************
 		Function Prototypes
 		*******************************************************************************/
-		void PICOMMS_TX_Init(void);
+		void vPICOMMS__Init(void);
+		void vPICOMMS__Process(void);
+
 
 		//tx system
-		void PICOMMS_TX_Init(void);
+		void vPICOMMS_TX__Init(void);
 		void PICOMMS_TX_beginFrame();
 		void PICOMMS_TX_calculateChecksum(Luint16 lastByte);
 		Luint16 PICOMMS_TX_endFrame();
 		Luint8 * pu8I2CTx__Get_BufferPointer(void);
 		void PICOMMS_TX_addParameter_int8(Luint16 u16Index, Lint8 data);
-		void PICOMMS_TX_addParameter_uint8(Luint16 u16Index, Luint8 data);
+		void vPICOMMS_TX__Add_U8(Luint16 u16Index, Luint8 data);
 		void PICOMMS_TX_addParameter_int16(Luint16 u16Index, Lint16 data);
-		void PICOMMS_TX_addParameter_uint16(Luint16 u16Index, Luint16 data);
+		void vPICOMMS_TX__Add_U16(Luint16 u16Index, Luint16 data);
 		void PICOMMS_TX_addParameter_int64(Luint16 u16Index, Lint64 data);
 		void PICOMMS_TX_addParameter_uint64(Luint16 u16Index, Luint64 data);
 		void PICOMMS_TX_addParameter_int32(Luint16 u16Index, Lint32 data);
-		void PICOMMS_TX_addParameter_uint32(Luint16 u16Index, Luint32 data);
-		void PICOMMS_TX_addParameter_float(Luint16 u16Index, Lfloat32 data);
+		void vPICOMMS_TX__Add_U32(Luint16 u16Index, Luint32 data);
+		void vPICOMMS_TX__Add_F32(Luint16 u16Index, Lfloat32 data);
 		void PICOMMS_TX_addParameter_double(Luint16 u16Index, Lfloat64 data);
 		
+
+		//Rx system
+		void vPICOMMS_RX__Init();
+		void vPICOMMS_RX__Receive_Bytes(Luint8* data, Luint16 length);
+
 
 		//win32 support
 		#ifdef WIN32

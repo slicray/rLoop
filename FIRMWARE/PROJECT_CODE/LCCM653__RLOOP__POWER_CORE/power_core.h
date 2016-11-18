@@ -12,50 +12,22 @@
 	#if C_LOCALDEF__LCCM653__ENABLE_THIS_MODULE == 1U
 
 		#include <LCCM653__RLOOP__POWER_CORE/PI_COMMS/power_core__pi_comms__types.h>
+		#include <LCCM653__RLOOP__POWER_CORE/power_core__state_types.h>
+
+		//local fault flags
+		#include <LCCM653__RLOOP__POWER_CORE/power_core__fault_flags.h>
+
+
+
+		//for software fault tree handling
+		#include <MULTICORE/LCCM284__MULTICORE__FAULT_TREE/fault_tree__public.h>
+
 
 		/*******************************************************************************
 		Defines
 		*******************************************************************************/
 
-		/** Init states.
-		 * These enums are for the init states of the Power Node. As each subsystem is brought
-		 * online the states will be incremented.
-		 */
-		typedef enum
-		{
 
-			/** Unknown state, could also be out of reset */
-			INIT_STATE__UNKNOWN = 0U,
-
-			/** First starting state launched after Init */
-			INIT_STATE__START,
-
-			/** Init any comms channels such as I2C and SPI */
-			INIT_STATE__COMMS,
-
-			/** Init the 1 wire network and I2C <> 1 Wire devices */
-			INIT_STATE__CELL_TEMP_START,
-
-			/** Run the network search */
-			INIT_STATE__CELL_TEMP_SEARCH,
-
-			/** Done with the 1-wire searching */
-			INIT_STATE__CELL_TEMP_SEARCH_DONE,
-
-			/** Init the BMS layer */
-			INIT_STATE__BMS,
-
-			/** Start the TSYS01 */
-			INIT_STATE__TSYS01,
-
-			/** Init the node pressure MS5607*/
-			INIT_STATE__MS5607,
-
-
-			/** Normal run state */
-			INIT_STATE__RUN
-
-		}E_PWRNODE__INIT_STATES;
 
 
 
@@ -66,15 +38,50 @@
 		/** Main Power Node Structure */
 		struct _strPWRNODE
 		{
+			//upper structure guarding
+			Luint32 u32Guard1;
+
+			/** main state machine */
+			E_PWRNODE__RUN_STATES eMainState;
+
+			/** fault flags structure */
+			struct
+			{
+
+				/** Main top level fault system */
+				FAULT_TREE__PUBLIC_T sTopLevel;
+
+			}sFaults;
 
 			/** Power on state machines and diagnostics */
 			struct
 			{
 
 				/** The current Init State */
-				E_PWRNODE__INIT_STATES sState;
+				E_PWRNODE__INIT_STATES eState;
 
 			}sInit;
+
+			/** DC/DC Converter control layer */
+			struct
+			{
+
+				/** DC/DC state machine */
+				E_PWR_DC__STATE_T eState;
+
+				/** Unlock Key Issued*/
+				Luint8 u8Unlock;
+
+				/** Issued to safe the pod */
+				Luint8 u8PodSafeCommand;
+
+				/** 100ms timer tick flag */
+				Luint8 u8100MS_Tick;
+
+				/** Increments of 100ms */
+				Luint32 u32100MS_TimerCount;
+
+			}sDC;
 
 			/** Pi Comms Layer */
 			struct
@@ -83,7 +90,20 @@
 				/** the current state */
 				E_POWER_PICOM__STATE_T eState;
 
+				/** 100ms timer interrupt tick*/
+				Luint8 u8100MS_Timer;
+
 			}sPiComms;
+
+			/** Charger Control */
+			struct
+			{
+
+				/** Charger Relay control state */
+				E_PWRNODE__CHG_RLY_STATES_T eRelayState;
+
+
+			}sCharger;
 
 
 			/** Win32 Functions*/
@@ -96,6 +116,8 @@
 			}sWIN32;
 
 #endif
+			//lower structure guarding
+			Luint32 u32Guard2;
 
 		};
 
@@ -105,9 +127,31 @@
 		*******************************************************************************/
 		DLL_DECLARATION void vPWRNODE__Init(void);
 		DLL_DECLARATION void vPWRNODE__Process(void);
+		void vPWRNODE__RTI_100MS_ISR(void);
+		void vPWRNODE__RTI_10MS_ISR(void);
+
+		//fault subsystem
+		void vPWRNODE_FAULTS__Init(void);
+		void vPWRNODE_FAULTS__Process(void);
 
 		//main application state machine
 		void vPWRNODE_SM__Init(void);
+		void vPWRNODE_SM__Process(void);
+
+		//DC/DC converter system
+		void vPWRNODE_DC__Init(void);
+		void vPWRNODE_DC__Process(void);
+		void vPWRNODE_DC__Pet_GS_Message(Luint32 u32Key);
+		Luint32 u32PWRNODE_DC__Get_TimerCount(void);
+		void vPWRNODE_DC__Pod_Safe_Unlock(Luint32 u32UnlockKey);
+		void vPWRNODE_DC__Pod_Safe_Go(void);
+		void vPWRNODE_DC__100MS_ISR(void);
+
+		//charger relay
+		void vPWRNODE_CHG_RELAY__Init(void);
+		void vPWRNODE_CHG_RELAY__Process(void);
+		void vPWRNODE_CHG_RELAY__On(void);
+		void vPWRNODE_CHG_RELAY__Off(void);
 
 		//BMS interface layer
 		void vPWRNODE_BMS__Init(void);
@@ -116,6 +160,21 @@
 		//pi comms interface
 		void vPWRNODE_PICOMMS__Init(void);
 		void vPWRNODE_PICOMMS__Process(void);
+		void vPWRNODE_PICOMMS__100MS_ISR(void);
+
+			//common messaging interface
+			//for the PodSafe (DC/DC converter system)
+			void vPWRNODE_PICOMMS_MSG__PodSafe__UnlockKey(Luint32 u32Key);
+			void vPWRNODE_PICOMMS_MSG__PodSafe__Execute(void);
+			Luint32 u32PWRNODE_PICOMMS_MSG__PodSafe__Get_Watchdog_Value(void);
+
+			//for the node temperature system
+			Lfloat32 f32PWRNODE_PICOMMS_MSG__NodeTemp__Get_DegC(void);
+			Luint32 u32PWRNODE_PICOMMS_MSG__NodeTemp__Get_FaulFlags(void);
+
+			//for the node pressure system
+
+
 
 		//CAN
 		void vPWRNODE_CAN__Init(void);
@@ -130,11 +189,13 @@
 		//node temperature reading
 		void vPWRNODE_NODETEMP__Init(void);
 		void vPWRNODE_NODETEMP__Process(void);
-		Lfloat32 f32PWRNODE_NODETEMP__Get_Temperature_DegC(void);
+		Lfloat32 f32PWRNODE_NODETEMP__Get_DegC(void);
+		Luint32 u32PWRNODE_NODETEMP__Get_FaultFlags(void);
 
 		//node pressure reading
-		void vPWNODE_NODEPRESS__Init(void);
-		void vPWNODE_NODEPRESS__Process(void);
+		void vPWRNODE_NODEPRESS__Init(void);
+		void vPWRNODE_NODEPRESS__Process(void);
+		Lfloat32 f32PWRNODE_NODEPRESS__Get_Pressure_Bar(void);
 
 #ifdef WIN32
 		void vPWRNODE_WIN32__Init(void);

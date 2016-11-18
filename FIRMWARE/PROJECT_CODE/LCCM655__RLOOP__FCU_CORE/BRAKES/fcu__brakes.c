@@ -26,6 +26,7 @@
 #include "../fcu_core.h"
 
 #if C_LOCALDEF__LCCM655__ENABLE_THIS_MODULE == 1U
+#if C_LOCALDEF__LCCM655__ENABLE_BRAKES == 1U
 
 //the structure
 extern struct _strFCU sFCU;
@@ -40,9 +41,17 @@ extern struct _strFCU sFCU;
  */
 void vFCU_BRAKES__Init(void)
 {
+	Luint8 u8Counter;
 
 	//init the state machine variables
 	sFCU.eBrakeStates = BRAKE_STATE__IDLE;
+
+	for(u8Counter = 0U; u8Counter < C_FCU__NUM_BRAKES; u8Counter++)
+	{
+		sFCU.sBrakes[u8Counter].sCurrent.f32ScrewPos_mm = 0.0F;
+		sFCU.sBrakes[u8Counter].sCurrent.f32IBeam_mm = 0.0F;
+		sFCU.sBrakes[u8Counter].sCurrent.f32MLP_mm = 0.0F;
+	}
 
 	//init the limit switches
 	vFCU_BRAKES_SW__Init();
@@ -52,6 +61,8 @@ void vFCU_BRAKES__Init(void)
 
 	//init the stepper rotate module
 	vFCU_BRAKES_STEP__Init();
+
+
 
 }
 
@@ -126,18 +137,52 @@ void vFCU_BRAKES__Process(void)
 
 		case BRAKE_STATE__TEST:
 			//just LG test area.
-			vFCU_BRAKES__Move_IBeam_Distance_Microns(500);
+			vFCU_BRAKES__Move_IBeam_Distance_mm(500);
 			break;
 
 
 	}
-
+	//Process the MLP
+	vFCU_BRAKES_MLP__Process();
 }
+
+
+//gets the computed screw position
+Lfloat32 f32FCU_BRAKES__Get_ScrewPos(E_FCU__BRAKE_INDEX_T eBrake)
+{
+	return sFCU.sBrakes[(Luint8)eBrake].sCurrent.f32ScrewPos_mm;
+}
+
+E_FCU__SWITCH_STATE_T eFCU_BRAKES__Get_SwtichState(E_FCU__BRAKE_INDEX_T eBrake, E_FCU__BRAKE_LIMSW_INDEX_T eSwitch)
+{
+	return sFCU.sBrakes[eBrake].sLimits[eSwitch].eSwitchState;
+}
+
+//get the RAW ADC values
+Luint16 u16FCU_BRAKES__Get_ADC_Raw(E_FCU__BRAKE_INDEX_T eBrake)
+{
+	return sFCU.sBrakes[(Luint8)eBrake].sMLP.u16ADC_Sample;
+}
+
+Lfloat32 f32FCU_BRAKES__Get_IBeam_mm(E_FCU__BRAKE_INDEX_T eBrake)
+{
+	return sFCU.sBrakes[(Luint8)eBrake].sCurrent.f32IBeam_mm;
+}
+
+Lfloat32 f32FCU_BRAKES__Get_MLP_mm(E_FCU__BRAKE_INDEX_T eBrake)
+{
+	return sFCU.sBrakes[(Luint8)eBrake].sCurrent.f32MLP_mm;
+}
+
+
+
+
+
 
 //move the brakes to a distance in MM from the I Beam
 //approx distances are 25mm (fully open) to 0mm (fully closed)
 //some calibration will be needed here.
-void vFCU_BRAKES__Move_IBeam_Distance_Microns(Luint32 u32Distance)
+void vFCU_BRAKES__Move_IBeam_Distance_mm(Luint32 u32Distance)
 {
 
 	//temp
@@ -168,7 +213,10 @@ void vFCU_BRAKES__Move_Percent_Position(Lfloat32 f32Percent, E_FCU__BRAKE_INDEX_
 	}
 }
 
-
+#endif //C_LOCALDEF__LCCM655__ENABLE_BRAKES
+#ifndef C_LOCALDEF__LCCM655__ENABLE_BRAKES
+	#error
+#endif
 #endif //#if C_LOCALDEF__LCCM655__ENABLE_THIS_MODULE == 1U
 //safetys
 #ifndef C_LOCALDEF__LCCM655__ENABLE_THIS_MODULE

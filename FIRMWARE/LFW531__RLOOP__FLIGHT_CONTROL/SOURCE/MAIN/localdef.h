@@ -34,7 +34,7 @@ RLOOP - PI COMMUNICATIONS MODULE
 		#define C_LOCALDEF__LCCM656__USE_ON_WIN32							(0U)
 
 		/** enable the receiver side? */
-		#define C_LOCALDEF__LCCM656__ENABLE_RX								(0U)
+		#define C_LOCALDEF__LCCM656__ENABLE_RX								(1U)
 
 		/** Testing Options */
 		#define C_LOCALDEF__LCCM656__ENABLE_TEST_SPEC						(0U)
@@ -49,6 +49,29 @@ RLOOP - FLIGHT CONTROL UNIT - CORE
 	#define C_LOCALDEF__LCCM655__ENABLE_THIS_MODULE							(1U)
 	#if C_LOCALDEF__LCCM655__ENABLE_THIS_MODULE == 1U
 
+		/** Enable or disable the PiComms layer */
+		#define C_LOCALDEF__LCCM655__ENABLE_PI_COMMS						(0U)
+
+		/** Enable the OptoNCDT laser interface */
+		#define C_LOCALDEF__LCCM655__ENABLE_LASER_OPTONCDT					(1U)
+
+		/** Number of OptoNCDT lasers, must be in order from A0:2, B0:2*/
+		#define C_LOCALDEF__LCCM655__NUM_LASER_OPTONCDT						(1U)
+
+		/** Enable accel subsystem */
+		#define C_LOCALDEF__LCCM655__ENABLE_ACCEL							(0U)
+
+		/** Enable the braking subsystems */
+		#define C_LOCALDEF__LCCM655__ENABLE_BRAKES							(1U)
+
+		/** Enable the throttle control */
+		#define C_LOCALDEF__LCCM655__ENABLE_THROTTLE						(0U)
+
+		/** Enable the ASI_RS485 */
+		#define C_LOCALDEF__LCCM655__ENABLE_ASI_RS485						(0U)
+
+		/** Enable the pusher detection system */
+		#define C_LOCALDEF__LCCM655__ENABLE_PUSHER							(0U)
 
 		#define C_LOCALDEF__LCCM655__EEPROM_OFFSET__BRAKES_HEADER			(40U)
 		#define C_LOCALDEF__LCCM655__EEPROM_OFFSET__BRAKE0_ZERO				(41U)
@@ -64,8 +87,8 @@ RLOOP - FLIGHT CONTROL UNIT - CORE
 		#define C_LOCALDEF__LCCM655__EEPROM_OFFSET__STEP_CRC				(50U)
 
 		/** ADC Sample Limits */
-		#define C_LOCALDEF__LCCM655__ADC_SAMPLE__LOWER_BOUND				(300U)
-		#define C_LOCALDEF__LCCM655__ADC_SAMPLE__UPPER_BOUND				(3000U)
+		#define C_LOCALDEF__LCCM655__ADC_SAMPLE__LOWER_BOUND				(420U)
+		#define C_LOCALDEF__LCCM655__ADC_SAMPLE__UPPER_BOUND				(3500U)
 
 		/** Testing Options */
 		#define C_LOCALDEF__LCCM655__ENABLE_TEST_SPEC						(0U)

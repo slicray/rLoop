@@ -30,7 +30,6 @@
 		#define C_MLP__MAX_AVERAGE_SIZE				(8U)
 
 
-
 		/*******************************************************************************
 		Structures
 		*******************************************************************************/
@@ -79,6 +78,10 @@
 					/** The program index for N2HET, even if not used on both channels */
 					Luint16 u16N2HET_Prog;
 
+					/** The current state of the switch */
+					E_FCU__SWITCH_STATE_T eSwitchState;
+
+
 				}sLimits[BRAKE_SW__MAX_SWITCHES];
 
 				/** Linear position sensor detail */
@@ -105,6 +108,13 @@
 					/** Average Array for MLP filter function				 */
 					Luint16 u16AverageArray[C_MLP__MAX_AVERAGE_SIZE];
 
+					/** Lowest MLP Value				 */
+					Luint16 lowest_value;
+
+					/** Highest MLP Value				 */
+					Luint16 highest_value;
+
+
 				}sMLP;
 
 
@@ -127,6 +137,24 @@
 				}sMove;
 
 
+				/** Current Details */
+				struct
+				{
+
+					/** the screw position in mm */
+					Lfloat32 f32ScrewPos_mm;
+
+					/** I-Beam distance in mm */
+					Lfloat32 f32IBeam_mm;
+
+					/** I-Beam distance in mm */
+					Lfloat32 f32MLP_mm;
+
+
+				}sCurrent;
+
+
+
 				/** individual brake fault flags */
 				FAULT_TREE__PUBLIC_T sFaultFlags;
 
@@ -141,7 +169,7 @@
 				struct
 				{
 					/** most recent recorded sample from the Accel */
-					Lint16 s16LastSample;
+					Lint16 s16LastSample[3];
 
 				}sChannels[C_LOCALDEF__LCCM418__NUM_DEVICES];
 
@@ -153,6 +181,9 @@
 
 				//the current state
 				E_FCU_PICOM__STATE_T eState;
+
+				/** 100ms timer tick */
+				Luint8 u8100MS_Timer;
 
 			}sPiComms;
 
@@ -193,6 +224,36 @@
 
 			}sPusher;
 
+			/** Overall structure for the laser interfaces */
+			struct
+			{
+				/** state machine for processing the OptoNCDT systems */
+				E_FCU_OPTOLASER__STATE_T eOptoNCDTState;
+
+				/** The opto NCDT laser interfaces */
+				struct
+				{
+					/** RX byte state machine */
+					E_OPTONCDT__RX_STATE_T eRxState;
+
+					/** A new packet is available for distance processing */
+					Luint8 u8NewPacket;
+
+					/** Array to hold new bytes received */
+					Luint8 u8NewByteArray[3];
+
+					/** The most recent distance*/
+					Lfloat32 f32Distance;
+
+					/** New distance has been measured, other layer to clear it */
+					Luint8 u8NewDistanceAvail;
+
+				}sOptoLaser[C_LOCALDEF__LCCM655__NUM_LASER_OPTONCDT];
+
+			}sLasers;
+
+
+
 			/** Structure guard 2*/
 			Luint32 u32Guard2;
 			
@@ -217,15 +278,26 @@
 		void vFCU_MAINSM__Init(void);
 		void vFCU_MAINSM__Process(void);
 
+		//lasers for OptoNCDT inerface
+		void vFCU_LASEROPTO__Init(void);
+		void vFCU_LASEROPTO__Process(void);
+		Lfloat32 f32FCU_LASEROPTO__Get_Distance(Luint8 u8LaserIndex);
+
 		//pi comms
 		void vFCU_PICOMMS__Init(void);
 		void vFCU_PICOMMS__Process(void);
+		void vFCU_PICOMMS__100MS_ISR(void);
 
 		//brakes
 		void vFCU_BRAKES__Init(void);
 		void vFCU_BRAKES__Process(void);
-		void vFCU_BRAKES__Move_IBeam_Distance_Microns(Luint32 u32Distance);
-		
+		void vFCU_BRAKES__Move_IBeam_Distance_mm(Luint32 u32Distance);
+		Lfloat32 f32FCU_BRAKES__Get_ScrewPos(E_FCU__BRAKE_INDEX_T eBrake);
+		E_FCU__SWITCH_STATE_T eFCU_BRAKES__Get_SwtichState(E_FCU__BRAKE_INDEX_T eBrake, E_FCU__BRAKE_LIMSW_INDEX_T eSwitch);
+		Luint16 u16FCU_BRAKES__Get_ADC_Raw(E_FCU__BRAKE_INDEX_T eBrake);
+		Lfloat32 f32FCU_BRAKES__Get_IBeam_mm(E_FCU__BRAKE_INDEX_T eBrake);
+		Lfloat32 f32FCU_BRAKES__Get_MLP_mm(E_FCU__BRAKE_INDEX_T eBrake);
+
 			//stepper drive
 			void vFCU_BRAKES_STEP__Init(void);
 			void vFCU_BRAKES_STEP__Process(void);
@@ -248,6 +320,7 @@
 		//accelerometer layer
 		void vFCU_ACCEL__Init(void);
 		void vFCU_ACCEL__Process(void);
+		Lint16 s16FCU_ACCEL__Get_LastSample(Luint8 u8Index, Luint8 u8Axis);
 
 		//Pusher interface
 		void vFCU_PUSHER__Init(void);
@@ -257,6 +330,8 @@
 		Luint8 u8FCU_PUSHER__Get_InterlockA(void);
 		Luint8 u8FCU_PUSHER__Get_InterlockB(void);
 		void vFCU_PUSHER__10MS_ISR(void);
+		Luint8 u8FCU_PUSHER__Get_Switch(Luint8 u8Switch);
+		Luint8 u8FCU_PUSHER__Get_PusherState(void);
 
 
 		//ASI interface
