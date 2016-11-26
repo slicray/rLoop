@@ -162,7 +162,7 @@ Lint16 s16AMC7812__DAC_Control( Luint8 u8Input )
 
 // Sets the voltage of the specified pin for the given command and conversion factor (to millivolts)
 
-Lint16 s16AMC7812_SetPinVoltage( Luint16 u16Command, Luint16 u16MaxCommandValue, Luint16 u16MinCommandValue, E_AMC7812_TASKS eTask )
+Lint16 s16AMC7812__SetPinVoltage( Luint16 u16Command, Luint16 u16MaxCommandValue, Luint16 u16MinCommandValue, E_AMC7812_TASKS eTask )
 {
 	// declarations
 

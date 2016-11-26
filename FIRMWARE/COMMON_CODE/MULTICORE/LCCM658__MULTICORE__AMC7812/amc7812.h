@@ -169,6 +169,8 @@
 		
 		//setup the GPIO
 		void vAMC7812_GPIO__Init(void);
+		void vAMC7812_GPIO__Process(void);
+		void vAMC7812_GPIO__Test( void );
 		
 
 
