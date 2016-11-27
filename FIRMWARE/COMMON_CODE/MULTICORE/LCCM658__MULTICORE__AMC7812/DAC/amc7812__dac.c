@@ -149,6 +149,14 @@ Luint16 vAMC7812_DAC__Process( void )
 }
 
 
+void vAMC7812_SetOutput( void )
+{
+	// set the flag to set the output voltage
+
+	strAMC7812_DAC.u8FlagSetDACVoltage = 1U;
+}
+
+
 
 //--- Set the voltage of the specified pin for the given command and conversion factor (to millivolts) ---//
 
