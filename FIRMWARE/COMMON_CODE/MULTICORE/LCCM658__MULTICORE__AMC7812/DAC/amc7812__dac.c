@@ -74,7 +74,7 @@ Luint16 vAMC7812_DAC__Process( void )
 
 			vRM4_DELAYS__Delay_mS(10U);
 
-			// AMC7812 must be reset after power up
+			// software reset
 
 			s16Return = -1;
 			s16Return = s16AMC7812_I2C__TxCommand( C_LOCALDEF__LCCM658__BUS_ADDX, AMC7812_DAC_REG__SW_RESET );
@@ -94,35 +94,13 @@ Luint16 vAMC7812_DAC__Process( void )
 			}
 			break;
 
-
-
 		case AMC7812_DAC_STATE__SET_VOLTAGE:
 
-			//
-			break;
+			// set output pin voltage
 
-		case AMC7812_DAC_STATE__WAIT_LOOPS:
-
-			//
-			if ( strAMC7812_DAC.u32LoopCounter > C_LOCALDEF__LCCM658__NUM_CONVERSION_LOOPS )
-			{
-				// change state to write
-
-				strAMC7812_DAC.eState = AMC7812_DAC_STATE__IDLE;
-
-			}
-			else
-			{
-				// increment the loop counter
-
-				strAMC7812_DAC.u32LoopCounter += 1;
-
-			}
-
-			s16Return = 0;
+			s16Return = s16AMC7812__SetPinVoltage();
 
 			break;
-
 
 		case AMC7812_DAC_STATE__ERROR:
 
@@ -138,31 +116,9 @@ Luint16 vAMC7812_DAC__Process( void )
 
 
 
-// AMC7812 DAC control commands
-
-Lint16 s16AMC7812__DAC_Control( Luint8 u8Input )
-{
-
-	Lint16 s16Return = 0;
-	// AMC7812 DAC control signals:
-
-	// DAC CLR0 (low clears DAC, high is normal)
-
-	// DAC CLR1 (low clears DAC, high is normal)
-
-	// DAC RESET (low resets hardware)
-
-	// DAC DAV (data available - low when conversion ends)
-
-	// DAC CNVT (conversion trigger )
-
-	return s16Return;
-
-}
-
 // Sets the voltage of the specified pin for the given command and conversion factor (to millivolts)
 
-Lint16 s16AMC7812__SetPinVoltage( Luint16 u16Command, Luint16 u16MaxCommandValue, Luint16 u16MinCommandValue, E_AMC7812_TASKS eTask )
+Lint16 s16AMC7812__SetPinVoltage( void )
 {
 	// declarations
 
@@ -170,6 +126,20 @@ Lint16 s16AMC7812__SetPinVoltage( Luint16 u16Command, Luint16 u16MaxCommandValue
 	Luint16 u16OutputVolts;
 	Lfloat32 f32ConversionFactor;
 	E_AMC7812_DAC_DATA_REG_ADDRESSES eDAC_REG_ADDR;
+	Luint16 u16Command;
+	Luint16 u16MaxCommandValue;
+	Luint16 u16MinCommandValue;
+	E_AMC7812_TASKS eTask;
+
+	u16Command = strAMC7812_DAC.u16Command;
+	u16MaxCommandValue = strAMC7812_DAC.u16MaxCommandValue;
+	u16MinCommandValue = strAMC7812_DAC.u16MinCommandValue;
+	eTask = strAMC7812_DAC.eTask;
+
+
+	// change the state
+
+	strAMC7812_DAC.eState = AMC7812_DAC_STATE__SET_VOLTAGE;
 
 	// compute conversion factor (command units to volts)
 
@@ -239,6 +209,8 @@ Lint16 s16AMC7812__SetPinVoltage( Luint16 u16Command, Luint16 u16MaxCommandValue
 	if ( s16Return >= 0 )
 	{
 		// successful write, change state to idle
+
+		strAMC7812_DAC.eState = AMC7812_DAC_STATE__IDLE;
 
 	}
 	else

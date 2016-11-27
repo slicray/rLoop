@@ -20,8 +20,8 @@
 		Defines
 		*******************************************************************************/
 
-#define DAC_OUT_MAX_MVOLTS 5000;		// DAC output voltage limit in millivolts
-#define DAC_OUT_MIN_MVOLTS 0;		// DAC output voltage limit in millivolts
+#define DAC_OUT_MAX_MVOLTS 5000		// DAC output voltage limit in millivolts
+#define DAC_OUT_MIN_MVOLTS 0		// DAC output voltage limit in millivolts
 
 
 		// enum type for DAC 16-bit data registers
@@ -139,6 +139,11 @@
 			Luint16 u16MaxVoltage;
 			Luint16 u16MinVoltage;
 
+			// Input data
+			Luint16 u16Command;
+			Luint16 u16MaxCommandValue;
+			Luint16 u16MinCommandValue;
+			E_AMC7812_TASKS eTask;
 
 		};
 
@@ -162,7 +167,7 @@
 
 		Lint16 s16AMC7812_I2C__WriteU16( Luint8 u8DeviceAddx, Luint8 u8RegisterAddx, Luint16 u16Value );
 		Lint16 s16AMC7812_I2C__TxCommand( Luint8 u8DeviceAddx, E_AMC7812_DAC_CONTROL_REG_ADDRESSES eRegister );
-		Lint16 s16AMC7812__SetPinVoltage( Luint16 u16Command, Luint16 u16MaxCommandValue, Luint16 u16MinCommandValue, E_AMC7812_TASKS eTask );
+		Lint16 s16AMC7812__SetPinVoltage( void );
 		
 		//ADC
 		void vAMC7812_ADC__Init(void);
