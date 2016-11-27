@@ -20,8 +20,8 @@
 		Defines
 		*******************************************************************************/
 
-#define DAC_OUT_MAX_MVOLTS 5000		// DAC output voltage limit in millivolts
-#define DAC_OUT_MIN_MVOLTS 0		// DAC output voltage limit in millivolts
+#define DAC_OUT_MAX_MVOLTS 5000		// DAC output voltage limit
+#define DAC_OUT_MIN_MVOLTS 0		// DAC output voltage limit
 
 
 		// enum type for DAC 16-bit data registers
@@ -134,16 +134,32 @@
 
 			E_AMC7812_DAC_DATA_REG_ADDRESSES eDAC_Data_Addx;
 
-			// DAC voltage limits
+			// DAC voltage limits - millivolts
 
 			Luint16 u16MaxVoltage;
 			Luint16 u16MinVoltage;
 
-			// Input data
+			// Input data to be set by function calling DAC:
+
+			// Commanded value (e.g., RPMs)
+
 			Luint16 u16Command;
+
+			// Highest permissible value for the commanded quantity
+
 			Luint16 u16MaxCommandValue;
+
+			// Lowest permissible value for the commanded quantity
+
 			Luint16 u16MinCommandValue;
+
+			// Symbol for device being controlled
+
 			E_AMC7812_TASKS eTask;
+
+			// Flag signalling DAC to set the output pin voltage
+
+			Luint8 u8FlagSetDACVoltage;
 
 		};
 

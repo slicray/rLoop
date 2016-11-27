@@ -43,6 +43,8 @@ void vAMC7812_DAC__Init(void)
 	strAMC7812_DAC.u32LoopCounter = 0U;
 	strAMC7812_DAC.u16MaxVoltage = (Luint16)DAC_OUT_MAX_MVOLTS;
 	strAMC7812_DAC.u16MinVoltage = (Luint16)DAC_OUT_MIN_MVOLTS;
+	strAMC7812_DAC.u8FlagSetDACVoltage = 0U;
+
 }
 
 
@@ -56,6 +58,19 @@ Luint16 vAMC7812_DAC__Process( void )
 	// initialize
 
 	s16Return = -1;
+
+	// check flag to set output
+
+	if ( strAMC7812_DAC.u8FlagSetDACVoltage == 1U )
+	{
+		// change the state
+
+		strAMC7812_DAC.eState = AMC7812_DAC_STATE__SET_VOLTAGE;
+	}
+	else
+	{
+		// no action req'd
+	}
 
 	// state machine
 
@@ -100,6 +115,25 @@ Luint16 vAMC7812_DAC__Process( void )
 
 			s16Return = s16AMC7812__SetPinVoltage();
 
+			// check for errors
+
+			if ( s16Return >= 0 )
+			{
+				// successful write, change state to idle, reset flag
+
+				strAMC7812_DAC.eState = AMC7812_DAC_STATE__IDLE;
+				strAMC7812_DAC.u8FlagSetDACVoltage = 0U;
+
+			}
+			else
+			{
+				// an error has occurred:
+
+				// change the state to error
+
+				strAMC7812_DAC.eState = AMC7812_DAC_STATE__ERROR;
+
+			}
 			break;
 
 		case AMC7812_DAC_STATE__ERROR:
@@ -116,7 +150,7 @@ Luint16 vAMC7812_DAC__Process( void )
 
 
 
-// Sets the voltage of the specified pin for the given command and conversion factor (to millivolts)
+//--- Set the voltage of the specified pin for the given command and conversion factor (to millivolts) ---//
 
 Lint16 s16AMC7812__SetPinVoltage( void )
 {
@@ -129,37 +163,39 @@ Lint16 s16AMC7812__SetPinVoltage( void )
 	Luint16 u16Command;
 	Luint16 u16MaxCommandValue;
 	Luint16 u16MinCommandValue;
+	Luint16 u16MaxVolts;
+	Luint16 u16MinVolts;
 	E_AMC7812_TASKS eTask;
+
+	// set local variables
 
 	u16Command = strAMC7812_DAC.u16Command;
 	u16MaxCommandValue = strAMC7812_DAC.u16MaxCommandValue;
 	u16MinCommandValue = strAMC7812_DAC.u16MinCommandValue;
+	u16MaxVolts = strAMC7812_DAC.u16MaxVoltage;
+	u16MinVolts = strAMC7812_DAC.u16MinVoltage;
 	eTask = strAMC7812_DAC.eTask;
 
 
-	// change the state
-
-	strAMC7812_DAC.eState = AMC7812_DAC_STATE__SET_VOLTAGE;
-
 	// compute conversion factor (command units to volts)
 
-	f32ConversionFactor = (Lfloat32)( strAMC7812_DAC.u16MaxVoltage -  strAMC7812_DAC.u16MaxVoltage ) / (Lfloat32)( u16MaxCommandValue - u16MinCommandValue );
+	f32ConversionFactor = (Lfloat32)( u16MaxVolts -  u16MinVolts ) / (Lfloat32)( u16MaxCommandValue - u16MinCommandValue );
 
 	// Compute required voltage
 
-	u16OutputVolts = (Luint16)( u16Command * f32ConversionFactor);
+	u16OutputVolts = (Luint16)( u16Command * f32ConversionFactor );
 
 	// Check that output is within range
 
-	if ( u16OutputVolts > strAMC7812_DAC.u16MinVoltage )
+	if ( u16OutputVolts > u16MaxVolts )
 	{
-		u16OutputVolts = strAMC7812_DAC.u16MinVoltage;
+		u16OutputVolts = u16MaxVolts;
 	}
 	else
 	{
-		if ( u16OutputVolts < strAMC7812_DAC.u16MinVoltage )
+		if ( u16OutputVolts < u16MinVolts )
 		{
-			u16OutputVolts = strAMC7812_DAC.u16MinVoltage;
+			u16OutputVolts = u16MinVolts;
 		}
 		else
 		{
@@ -167,7 +203,7 @@ Lint16 s16AMC7812__SetPinVoltage( void )
 		}
 	}
 
-	// get the address of the output pin data register for the input task number
+	// get the address of the output pin data register for the input task
 
 	switch ( eTask )
 	{
@@ -206,22 +242,6 @@ Lint16 s16AMC7812__SetPinVoltage( void )
 
 	s16Return = s16AMC7812_I2C__WriteU16( C_LOCALDEF__LCCM658__BUS_ADDX, eDAC_REG_ADDR, u16OutputVolts );
 
-	if ( s16Return >= 0 )
-	{
-		// successful write, change state to idle
-
-		strAMC7812_DAC.eState = AMC7812_DAC_STATE__IDLE;
-
-	}
-	else
-	{
-		// an error has occurred:
-
-		// change the state
-
-		strAMC7812_DAC.eState = AMC7812_DAC_STATE__ERROR;
-
-	}
 
 	return s16Return;
 }

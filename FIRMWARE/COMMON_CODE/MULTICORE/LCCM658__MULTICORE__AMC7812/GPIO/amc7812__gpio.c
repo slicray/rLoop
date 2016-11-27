@@ -28,6 +28,7 @@
 // GPIO pin address
 #define AMC7812_REG_ADR__GPIO 	(0x4B)
 
+#define NUM_GPIO_PINS			(8U)
 #define LOOP_COUNTER_LIMIT		(10000000U)
 
 /***************************************************************************//**
@@ -75,21 +76,27 @@ void vAMC7812_GPIO__Test( void )
 	Luint16 u16GPIO_BitField;
 	Luint32 u32Counter;
 	Luint8 u8GPIO_Addr;
-	Luint16 u16GPIO_Masks[8];
+	Luint16 u16GPIO_Mask;
+	Luint8 u8PinNum;
 
 
-	// generate bit masks
+	// Select a pin
 
-	u16GPIO_Masks[0] = 0x0001;
-	u32Counter = 1;
-	while ( u32Counter < 8 )
-	{
-		u16GPIO_Masks[u32Counter] = u16GPIO_Masks[u32Counter - 1] << 1;
-	}
+	u8PinNum = 0U;
 
-	// set GPIO 0 low
+
+	// initialize bit field
 
 	u16GPIO_BitField = 0x0000;
+
+	// generate bit mask
+
+	u16GPIO_Mask = 0x0001;
+	u16GPIO_Mask <<= u8PinNum;
+
+
+	// clear GPIO bits - set outputs low
+
 	u8GPIO_Addr = AMC7812_REG_ADR__GPIO;
 	s16Return = -1;
 	s16Return = s16AMC7812_I2C__WriteU16( C_LOCALDEF__LCCM658__BUS_ADDX, u8GPIO_Addr, u16GPIO_BitField );
@@ -102,9 +109,9 @@ void vAMC7812_GPIO__Test( void )
 		u32Counter++;
 	}
 
-	// set GPIO 0 high
+	// set GPIO {u8PinNum} high
 
-	u16GPIO_BitField = u16GPIO_Masks[0];
+	u16GPIO_BitField |= u16GPIO_Mask;
 	s16Return = -1;
 	s16Return = s16AMC7812_I2C__WriteU16( C_LOCALDEF__LCCM658__BUS_ADDX, u8GPIO_Addr, u16GPIO_BitField );
 
