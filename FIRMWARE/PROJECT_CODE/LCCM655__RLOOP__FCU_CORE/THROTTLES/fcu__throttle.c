@@ -18,7 +18,7 @@
 
 #include "../fcu_core.h"
 
-#include "fcu_throttle.h"
+#include "fcu__throttle.h"
 //#include "fcu_throttle_data.h"		// contains FCU system variables
 
 #include <MULTICORE/LCCM658__MULTICORE__AMC7812/amc7812.h>
@@ -28,6 +28,7 @@
 //struct _strTHROTTLE sTHROTTLE;
 // main FCU structure
 extern struct _strFCU sFCU;
+extern struct _strAMC7812_DAC strAMC7812_DAC;
 
 // number of hover engines
 #define NUM_HOVER_ENGINES		8U
