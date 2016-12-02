@@ -20,26 +20,40 @@
 		Defines
 		*******************************************************************************/
 
+#define DAC_OUT_MAX_MVOLTS 		5000		// DAC output voltage limit
+#define DAC_OUT_MIN_MVOLTS 		0		// DAC output voltage limit
+#define NUM_DAC_CHANNELS		(12U)
 
-		// enum type for THROTTLE DAC 16-bit data registers
-		typedef enum ACM7812_DAC_DATA_REG_ADDRESSES
+
+		// enum type for DAC 16-bit data registers
+
+		typedef enum AMC7812_DAC_DATA_REG_ADDRESSES
 		{
-			ACM7812_DAC_DATA_REG_ADR__HE1 = 0x33,		// address for AMC7812 DAC-0-OUT pin register, DAC-1- to DAC-7-OUT pins follow in order (see Table 10 in AMC7812 Datasheet)
-			ACM7812_DAC_DATA_REG_ADR__HE2 = 0x34,
-			ACM7812_DAC_DATA_REG_ADR__HE3 = 0x35,
-			ACM7812_DAC_DATA_REG_ADR__HE4 = 0x36,
-			ACM7812_DAC_DATA_REG_ADR__HE5 = 0x37,
-			ACM7812_DAC_DATA_REG_ADR__HE6 = 0x38,
-			ACM7812_DAC_DATA_REG_ADR__HE7 = 0x39,
-			ACM7812_DAC_DATA_REG_ADR__HE8 = 0x3A
+			AMC7812_REG_ADR__DAC_0_DATA = 0x33,		// address for AMC7812 DAC-0-OUT pin register (see Table 10, p. 60, AMC7812 Datasheet)
+			AMC7812_REG_ADR__DAC_1_DATA = 0x34,
+			AMC7812_REG_ADR__DAC_2_DATA = 0x35,
+			AMC7812_REG_ADR__DAC_3_DATA = 0x36,
+			AMC7812_REG_ADR__DAC_4_DATA = 0x37,
+			AMC7812_REG_ADR__DAC_5_DATA = 0x38,
+			AMC7812_REG_ADR__DAC_6_DATA = 0x39,
+			AMC7812_REG_ADR__DAC_7_DATA = 0x3A,
+			AMC7812_REG_ADR__DAC_8_DATA = 0x3B,
+			AMC7812_REG_ADR__DAC_9_DATA = 0x3C,
+			AMC7812_REG_ADR__DAC_10_DATA = 0x3D,
+			AMC7812_REG_ADR__DAC_11_DATA = 0x3E,
 		} E_AMC7812_DAC_DATA_REG_ADDRESSES;
 
 		typedef enum
 		{
-			ACM7812_DAC_REG__RESET = 0x7C
+			AMC7812_DAC_REG__SW_RESET = 0x7C,
+			AMC7812_DAC_REG__SW_DAC_CLR = 0x55,
+			AMC7812_DAC_REG__HW_DAC_CLR_EN_0 = 0x56,
+			AMC7812_DAC_REG__HW_DAC_CLR_EN_1 = 0x57
 		} E_AMC7812_DAC_CONTROL_REG_ADDRESSES;
 
-		/** State types for the TSYS01 state machine */
+
+		// States for the AMC7812 DAC state machine
+
 		typedef enum
 		{
 
@@ -58,8 +72,8 @@
 			// Waiting for the start of a conversion
 			AMC7812_DAC_STATE__WAITING,
 
-			// Issue the conversion command
-			AMC7812_DAC_STATE__WRITE,
+			// Set the output pin voltage
+			AMC7812_DAC_STATE__SET_VOLTAGE,
 
 			// Wait for a number of processing loops to expire
 			AMC7812_DAC_STATE__WAIT_LOOPS,
@@ -68,28 +82,55 @@
 		} E_AMC7812_DAC_STATES_T;
 
 
+		Luint8 u8DACOutputChannelAddr[NUM_DAC_CHANNELS];
+
 
 		/*******************************************************************************
 		Structures
 		*******************************************************************************/
+
 		struct _strAMC7812_DAC
 		{
 
-			/** the current state */
+			// the current state
+
 			E_AMC7812_DAC_STATES_T eState;
 
-			/** counter the number of main program loops */
+			// counter for the number of main program loops
+
 			Luint32 u32LoopCounter;
 
-			E_AMC7812_DAC_DATA_REG_ADDRESSES eDAC_Data_Addx;
+			// DAC voltage limits - millivolts
 
+			Luint16 u16MaxVoltage;
+			Luint16 u16MinVoltage;
+
+			// Input data to be set by function calling DAC:
+
+			// Commanded value (e.g., RPMs)
+
+			Luint16 u16Command;
+
+			// Highest permissible value for the commanded quantity
+
+			Luint16 u16MaxCommandValue;
+
+			// Lowest permissible value for the commanded quantity
+
+			Luint16 u16MinCommandValue;
+
+			// Output channel data
+
+			Luint8 u8DACRegAddr;
 
 		};
 
 		/*******************************************************************************
 		Function Prototypes
 		*******************************************************************************/
+
 		void vAMC7812__Init(void);
+
 		void vAMC7812__Process(void);
 		
 		//Lowlevel
@@ -97,19 +138,26 @@
 
 		//I2C
 		void vAMC7812_I2C__Init(void);
-		Lint16 s16AMC7812_I2C__TxCommand(Luint8 u8DeviceAddx, E_AMC7812_DAC_CONTROL_REG_ADDRESSES eRegister);
-		Lint16 s16AMC7812_I2C__WriteU16(Luint8 u8DeviceAddx, Luint8 u8RegisterAddx, Luint16 u16Value);
-
 		
-		//DAC
+		// DAC
 		void vAMC7812_DAC__Init(void);
+		Luint16 vAMC7812_DAC__Process(void);
+
+		Lint16 s16AMC7812_I2C__WriteU16(Luint8 u8DeviceAddx, Luint8 u8RegisterAddx, Luint16 u16Value);
+		Lint16 s16AMC7812_I2C__TxCommand(Luint8 u8DeviceAddx, Luint8 u8RegisterAddx);
+		Lint16 s16AMC7812__SetPinVoltage(void);
 		
 		//ADC
 		void vAMC7812_ADC__Init(void);
 		
 		//setup the GPIO
 		void vAMC7812_GPIO__Init(void);
+		void vAMC7812_GPIO__Process(void);
+		void vAMC7812_GPIO__Test(void);
 		
+
+
+
 	#endif //#if C_LOCALDEF__LCCM658__ENABLE_THIS_MODULE == 1U
 	//safetys
 	#ifndef C_LOCALDEF__LCCM658__ENABLE_THIS_MODULE

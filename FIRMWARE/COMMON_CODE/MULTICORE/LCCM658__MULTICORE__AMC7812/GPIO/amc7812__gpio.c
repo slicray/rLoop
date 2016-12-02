@@ -25,6 +25,12 @@
 #include "../amc7812.h"
 #if C_LOCALDEF__LCCM658__ENABLE_THIS_MODULE == 1U
 
+// GPIO pin address
+#define AMC7812_REG_ADR__GPIO 	(0x4B)
+
+#define NUM_GPIO_PINS			(8U)
+#define LOOP_COUNTER_LIMIT		(10000000U)
+
 /***************************************************************************//**
  * @brief
  * Init the GPIO portion of the device
@@ -32,12 +38,84 @@
  * @st_funcMD5		61B0504883195D29B464EA09607BECEF
  * @st_funcID		LCCM658R0.FILE.006.FUNC.001
  */
+
+
 void vAMC7812_GPIO__Init(void)
 {
 
 
 }
 
+
+void vAMC7812_GPIO__Process( void )
+{
+
+	// declarations
+
+	Luint8 u8GPIOState;
+
+	u8GPIOState = 100;
+
+	switch ( u8GPIOState )
+	{
+		case 0:
+			vAMC7812_GPIO__Test();
+			break;
+
+	}
+}
+
+
+
+
+void vAMC7812_GPIO__Test( void )
+{
+	// declarations
+
+	Lint16 s16Return;
+	Luint16 u16GPIO_BitField;
+	Luint32 u32Counter;
+	Luint8 u8GPIO_Addr;
+	Luint16 u16GPIO_Mask;
+	Luint8 u8PinNum;
+
+
+	// Select a pin
+
+	u8PinNum = 0U;
+
+
+	// initialize bit field
+
+	u16GPIO_BitField = 0x0000;
+
+	// generate bit mask
+
+	u16GPIO_Mask = 0x0001;
+	u16GPIO_Mask <<= u8PinNum;
+
+
+	// clear GPIO bits - set outputs low
+
+	u8GPIO_Addr = AMC7812_REG_ADR__GPIO;
+	s16Return = -1;
+	s16Return = s16AMC7812_I2C__WriteU16(C_LOCALDEF__LCCM658__BUS_ADDX, u8GPIO_Addr, u16GPIO_BitField);
+
+	//	use a loop for a cheap delay
+
+	u32Counter = 0;
+	while(u32Counter < LOOP_COUNTER_LIMIT)
+	{
+		u32Counter++;
+	}
+
+	// set GPIO {u8PinNum} high
+
+	u16GPIO_BitField |= u16GPIO_Mask;
+	s16Return = -1;
+	s16Return = s16AMC7812_I2C__WriteU16(C_LOCALDEF__LCCM658__BUS_ADDX, u8GPIO_Addr, u16GPIO_BitField);
+
+}
 
 
 #endif //#if C_LOCALDEF__LCCM658__ENABLE_THIS_MODULE == 1U

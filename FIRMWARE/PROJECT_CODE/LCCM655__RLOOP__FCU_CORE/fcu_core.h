@@ -154,10 +154,9 @@
 				}sCurrent;
 
 
+
 				/** individual brake fault flags */
 				FAULT_TREE__PUBLIC_T sFaultFlags;
-
-				Luint8 u8BrakeSWErr;
 
 			}sBrakes[C_FCU__NUM_BRAKES];
 
@@ -259,21 +258,61 @@
 
 			}sLasers;
 
-			/** Ethernet comms structure */
-			struct
-			{
-				/** our hardware MAC */
-				Luint8 u8MACAddx[6];
-
-				/** our locally assigned IP*/
-				Luint8 u8IPAddx[4];
-
-			}sEthernet;
 
 
 			/** Structure guard 2*/
 			Luint32 u32Guard2;
 			
+
+			/** Input data for throttle layer */
+			// (added by @gsweriduk on 23 NOV 2016)
+
+			struct strThrottleInterfaceData
+			{
+				// Ground Station command
+				E_GS_COMMANDS eGS_Command;
+
+				// Flight Control Unit mode
+				E_FCU_MODES eFCU_Mode;
+
+				// throttle command units (0 for RPM*10, 1 for Percent), needs to be sent by GS
+				Luint8 u8CommandUnits;
+
+				// speeds of HE1 to HE8
+				Luint16 u16HE_Speeds[8];
+
+				// duration of ramp command *** ASSUMING throttleStartRampDuration IS IN UNITS of MILLISECONDS ***
+				Luint16 u16throttleStartRampDuration;
+
+				// maximum speed of HEs in RPM*10
+				Luint16 u16HE_MAX_SPD;
+
+				// minimum speed of HEs in RPM*10
+				Luint16 u16HE_MIN_SPD;
+
+				// HE speeds for static hover
+				Luint16 u16rpmHEStaticHoveringSpeed;
+
+				// HE speeds for standby mode
+				Luint16 u16maxRunModeStandbySpeed;
+
+				// Throttle command values:
+				// [0] contains a command for all HEs, [1] - [8] contain commands for individual HEs
+				Luint16 u16ThrottleCommands[9];
+
+				// Number of the HE being given a command:
+				// A value of 0 signifies all HEs, 1 - 8 indicates a specific HE
+				Luint8 u8EngineNumber;
+
+				// state variable
+				E_THROTTLE_STATES_T eState;
+
+				// timer state
+				Luint8 u8100MS_Timer;
+
+			} sThrottle;
+
+
 		};
 
 		/*******************************************************************************
@@ -284,13 +323,6 @@
 		DLL_DECLARATION void vFCU__Process(void);
 		void vFCU__RTI_100MS_ISR(void);
 		void vFCU__RTI_10MS_ISR(void);
-
-		//network
-		void vFCU_NET__Init(void);
-		void vFCU_NET__Process(void);
-		Luint8 u8FCU_NET__Is_LinkUp(void);
-		void vFCU_NET_RX__RxUDP(Luint8 * pu8Buffer, Luint16 u16Length, Luint16 u16DestPort);
-		void vFCU_NET_RX__RxSafeUDP(Luint8 *pu8Payload, Luint16 u16PayloadLength, Luint16 ePacketType, Luint16 u16DestPort, Luint16 u16Fault);
 
 		//fault handling layer
 		void vFCU_FAULTS__Init(void);
@@ -323,26 +355,24 @@
 		Lfloat32 f32FCU_BRAKES__Get_IBeam_mm(E_FCU__BRAKE_INDEX_T eBrake);
 		Lfloat32 f32FCU_BRAKES__Get_MLP_mm(E_FCU__BRAKE_INDEX_T eBrake);
 
-		//stepper drive
-		void vFCU_BRAKES_STEP__Init(void);
-		void vFCU_BRAKES_STEP__Process(void);
-		void vFCU_BRAKES_STEP__Move(Lint32 s32Brake0Pos, Lint32 s32Brake1Pos);
-		Lint32 s32FCU_BRAKES__Get_CurrentPos(E_FCU__BRAKE_INDEX_T eBrake);
+			//stepper drive
+			void vFCU_BRAKES_STEP__Init(void);
+			void vFCU_BRAKES_STEP__Process(void);
+			void vFCU_BRAKES_STEP__Move(Lint32 s32Brake0Pos, Lint32 s32Brake1Pos);
+			Lint32 s32FCU_BRAKES__Get_CurrentPos(E_FCU__BRAKE_INDEX_T eBrake);
 
-		//brake switches
-		void vFCU_BRAKES_SW__Init(void);
-		void vFCU_BRAKES_SW__Process(void);
-		void vFCU_BRAKES_SW__Left_SwitchExtend_ISR(void);
-		void vFCU_BRAKES_SW__Left_SwitchRetract_ISR(void);
-		void vFCU_BRAKES_SW__Right_SwitchExtend_ISR(void);
-		void vFCU_BRAKES_SW__Right_SwitchRetract_ISR(void);
-		E_FCU__SWITCH_STATE_T eFCU_BRAKES_SW__Get_Switch(E_FCU__BRAKE_INDEX_T eBrake, E_FCU__BRAKE_LIMSW_INDEX_T eSwitch);
-		Luint8 u8FCU_BRAKES_SW__Get_FaultFlag(E_FCU__BRAKE_INDEX_T eBrake);
+			//brake switches
+			void vFCU_BRAKES_SW__Init(void);
+			void vFCU_BRAKES_SW__Left_SwitchExtend_ISR(void);
+			void vFCU_BRAKES_SW__Left_SwitchRetract_ISR(void);
+			void vFCU_BRAKES_SW__Right_SwitchExtend_ISR(void);
+			void vFCU_BRAKES_SW__Right_SwitchRetract_ISR(void);
+			E_FCU__SWITCH_STATE_T eFCU_BRAKES_SW__Get_Switch(E_FCU__BRAKE_INDEX_T eBrake, E_FCU__BRAKE_LIMSW_INDEX_T eSwitch);
 
 
-		//brakes MLP sensor
-		void vFCU_BRAKES_MLP__Init(void);
-		void vFCU_BRAKES_MLP__Process(void);
+			//brakes MLP sensor
+			void vFCU_BRAKES_MLP__Init(void);
+			void vFCU_BRAKES_MLP__Process(void);
 
 		//accelerometer layer
 		void vFCU_ACCEL__Init(void);
