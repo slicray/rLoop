@@ -125,6 +125,9 @@
 
 		};
 
+		struct _strAMC7812_DAC strAMC7812_DAC;
+
+
 		/*******************************************************************************
 		Function Prototypes
 		*******************************************************************************/
@@ -145,7 +148,7 @@
 
 		Lint16 s16AMC7812_I2C__WriteU16(Luint8 u8DeviceAddx, Luint8 u8RegisterAddx, Luint16 u16Value);
 		Lint16 s16AMC7812_I2C__TxCommand(Luint8 u8DeviceAddx, Luint8 u8RegisterAddx);
-		Lint16 s16AMC7812__SetPinVoltage(void);
+		Lint16 s16AMC7812_DAC__SetPinVoltage(void);
 		
 		//ADC
 		void vAMC7812_ADC__Init(void);

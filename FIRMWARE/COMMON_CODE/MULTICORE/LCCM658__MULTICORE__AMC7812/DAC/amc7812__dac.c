@@ -132,7 +132,7 @@ Luint16 vAMC7812_DAC__Process(void)
 
 //--- Set the voltage of the specified pin for the given command and conversion factor (to millivolts) ---//
 
-Lint16 s16AMC7812__SetPinVoltage(void)
+Lint16 s16AMC7812_DAC__SetPinVoltage(void)
 {
 	// declarations
 

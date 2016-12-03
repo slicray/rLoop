@@ -104,10 +104,18 @@ void vFCU_MAINSM__Process(void)
 
 		case RUN_STATE__STARTUP_MODE:
 			//run what we need to in startup mode, checkout sensors and other diagnostics
+
+			sFCU.eRunState = RUN_STATE__FLIGHT_MODE;
 			break;
 
 		case RUN_STATE__FLIGHT_MODE:
 			//this is the flight mode controller
+
+			//process the throttles
+			#if C_LOCALDEF__LCCM655__ENABLE_THROTTLE == 1U
+				vFCU_THROTTLE__Process();
+			#endif
+
 			break;
 
 	}//switch(sFCU.eRunState)
@@ -143,6 +151,8 @@ void vFCU_MAINSM__Process(void)
 		#if C_LOCALDEF__LCCM655__ENABLE_PI_COMMS == 1U
 			vFCU_PICOMMS__Process();
 		#endif
+
+
 	}
 	else
 	{

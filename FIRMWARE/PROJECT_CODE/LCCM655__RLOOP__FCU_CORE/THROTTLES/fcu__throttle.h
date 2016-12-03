@@ -68,17 +68,18 @@
 		/*******************************************************************************
 		Function Prototypes
 		*******************************************************************************/
-		void vTHROTTLE__Init(void);
-		void vTHROTTLE__Process(void);
+/*	moved to fcu_core.h
+		void vFCU_THROTTLE__Init(void);
+		void vFCU_THROTTLE__Process(void);
 
-		Lint16 s16THROTTLE__Step_Command(void);
-		Lint16 s16THROTTLE__Ramp_Command(void);
-		Lint16 s16THROTTLE__Write_HEx_Throttle_Command_to_DAC(Luint16 u16ThrottleCommand, Luint8 u8EngineNumber);
-		Lint16 s16THROTTLE__Write_All_HE_Throttle_Commands_to_DAC(Luint16 u16ThrottleCommand);
-		Lint16 s16THROTTLE__Hold(void);
+		Lint16 s16FCU_THROTTLE__Step_Command(void);
+		Lint16 s16FCU_THROTTLE__Ramp_Command(void);
+		Lint16 s16FCU_THROTTLE__Write_HEx_Throttle_Command_to_DAC(Luint16 u16ThrottleCommand, Luint8 u8EngineNumber);
+		Lint16 s16FCU_THROTTLE__Write_All_HE_Throttle_Commands_to_DAC(Luint16 u16ThrottleCommand);
+		Lint16 s16FCU_THROTTLE__Hold(void);
 
 		void vFCU_THROTTLE__100MS_ISR(void);		// Timer function
-
+ */
 
 
 	#endif //#if C_LOCALDEF__LCCM647__ENABLE_THIS_MODULE == 1U

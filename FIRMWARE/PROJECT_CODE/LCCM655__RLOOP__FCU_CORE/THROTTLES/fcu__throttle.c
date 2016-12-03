@@ -18,7 +18,7 @@
 
 #include "../fcu_core.h"
 
-#include "fcu__throttle.h"
+//#include "fcu__throttle.h"
 //#include "fcu_throttle_data.h"		// contains FCU system variables
 
 #include <MULTICORE/LCCM658__MULTICORE__AMC7812/amc7812.h>
@@ -28,7 +28,7 @@
 //struct _strTHROTTLE sTHROTTLE;
 // main FCU structure
 extern struct _strFCU sFCU;
-extern struct _strAMC7812_DAC strAMC7812_DAC;
+//extern struct _strAMC7812_DAC strAMC7812_DAC;
 
 // number of hover engines
 #define NUM_HOVER_ENGINES		8U
@@ -99,6 +99,12 @@ void vFCU_THROTTLE__Process(void)
 	Luint8 u8Counter;
 	Luint16 u16DoneFlag;
 
+	Luint16 u16Command;
+	Luint16 u8EngNum;
+
+	// xxxxxxxxxxx TEMP xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+	sFCU.sThrottle.eGS_Command = SET_HEX_SPEED;
+
 
 	// Determine if a change of state is required:
 
@@ -144,6 +150,8 @@ void vFCU_THROTTLE__Process(void)
 	{
 		// set command variables - values should be set by ground station interface
 
+		u8EngNum = 1U;// DUMMY
+		u16Command = 2000U;	// DUMMY
 		sFCU.sThrottle.u8EngineNumber = u8EngNum;
 		sFCU.sThrottle.u16ThrottleCommands[u8EngNum] = u16Command;
 
@@ -156,6 +164,7 @@ void vFCU_THROTTLE__Process(void)
 	{
 		// set command variables - value should be set by ground station interface
 
+		u16Command = 2000U;	// DUMMY
 		sFCU.sThrottle.u16ThrottleCommands[0] =  u16Command;
 		sFCU.sThrottle.u8EngineNumber = ALL_HES;
 
@@ -197,7 +206,7 @@ void vFCU_THROTTLE__Process(void)
 
 			// call step
 
-			s16Return = s16THROTTLE__Step_Command();
+			s16Return = s16FCU_THROTTLE__Step_Command();
 
 			// check for errors in data output
 
@@ -205,7 +214,7 @@ void vFCU_THROTTLE__Process(void)
 			{
 				// an error flag has been thrown
 
-				printf("Error in step command\n");
+				//printf("Error in step command\n");
 
 				// change the throttle state
 
@@ -229,11 +238,11 @@ void vFCU_THROTTLE__Process(void)
 				// call ramp (currently set to command all HEs, can be set to a specific HE: change index of u16ThrottleCommand)
 
 				s16Return = -1;
-				s16Return = s16THROTTLE__Ramp_Command();
+				s16Return = s16FCU_THROTTLE__Ramp_Command();
 
 				if(s16Return < 0)		// an error flag has been thrown
 				{
-					printf("Error in step command\n");
+					//printf("Error in step command\n");
 
 					// change the throttle state
 
@@ -273,7 +282,7 @@ void vFCU_THROTTLE__Process(void)
 
 			// an error has occurred
 
-			printf("Error in THROTTLE function\n");
+			//printf("Error in THROTTLE function\n");
 
 			break;
 
@@ -285,7 +294,7 @@ void vFCU_THROTTLE__Process(void)
 
 // --- Writes throttle commands for a constant value ---
 
-Lint16 s16THROTTLE__Step_Command(void)
+Lint16 s16FCU_THROTTLE__Step_Command(void)
 {
 	// variable declarations
 
@@ -342,13 +351,13 @@ Lint16 s16THROTTLE__Step_Command(void)
 		{
 			// write command to all engines
 
-			s16DACReturn = s16THROTTLE__Write_All_HE_Throttle_Commands_to_DAC(u16ThrottleCommand);
+			s16DACReturn = s16FCU_THROTTLE__Write_All_HE_Throttle_Commands_to_DAC(u16ThrottleCommand);
 		}
 		else
 		{
 			// write command to engine # {u8EngineNumber}
 
-			s16DACReturn = s16THROTTLE__Write_HEx_Throttle_Command_to_DAC(u16ThrottleCommand, sFCU.sThrottle.u8EngineNumber);
+			s16DACReturn = s16FCU_THROTTLE__Write_HEx_Throttle_Command_to_DAC(u16ThrottleCommand, sFCU.sThrottle.u8EngineNumber);
 		}
 
 	}
@@ -379,7 +388,7 @@ Lint16 s16THROTTLE__Step_Command(void)
 // --- Writes throttle command for a ramp function ---
 // Ramps up from the last commanded throttle value to u16ThrottleSetPoint over the duration contained in sFCU.sThrottle
 
-Lint16 s16THROTTLE__Ramp_Command(void)
+Lint16 s16FCU_THROTTLE__Ramp_Command(void)
 {
 	// variable declarations
 
@@ -467,20 +476,20 @@ Lint16 s16THROTTLE__Ramp_Command(void)
 	{
 		// command to all engines
 
-		s16DACReturn = s16THROTTLE__Write_All_HE_Throttle_Commands_to_DAC(u16RampThrottleCommand);
+		s16DACReturn = s16FCU_THROTTLE__Write_All_HE_Throttle_Commands_to_DAC(u16RampThrottleCommand);
 	}
 	else
 	{
 		// command to engine # {u8EngineNumber}
 
-		s16DACReturn = s16THROTTLE__Write_HEx_Throttle_Command_to_DAC(u16RampThrottleCommand, sFCU.sThrottle.u8EngineNumber);
+		s16DACReturn = s16FCU_THROTTLE__Write_HEx_Throttle_Command_to_DAC(u16RampThrottleCommand, sFCU.sThrottle.u8EngineNumber);
 	}
 
 	// check for errors in data output
 
 	if(s16DACReturn < 0)		// an error flag has been thrown
 	{
-		prinf("Error in ramp command\n");
+		//printf("Error in ramp command\n");
 
 		s16Return = -1;
 	}
@@ -512,7 +521,7 @@ Lint16 s16THROTTLE__Ramp_Command(void)
 // --- Write throttle commands for all HEs to the DAC  ---
 //   Normal return value is 0; returns the highest engine number of the writes that failed */
 
-Lint16 s16THROTTLE__Write_All_HE_Throttle_Commands_to_DAC(Luint16 u16ThrottleCommand)
+Lint16 s16FCU_THROTTLE__Write_All_HE_Throttle_Commands_to_DAC(Luint16 u16ThrottleCommand)
 {
 	// variable declarations
 
@@ -533,7 +542,7 @@ Lint16 s16THROTTLE__Write_All_HE_Throttle_Commands_to_DAC(Luint16 u16ThrottleCom
 
 	for(u8EngineNumberCtr = 1; u8EngineNumberCtr <= NUM_HOVER_ENGINES; u8EngineNumberCtr++)
 	{
-		s16DACReturn = s16THROTTLE__Write_HEx_Throttle_Command_to_DAC(u16ThrottleCommand, u8EngineNumberCtr);
+		s16DACReturn = s16FCU_THROTTLE__Write_HEx_Throttle_Command_to_DAC(u16ThrottleCommand, u8EngineNumberCtr);
 
 		if(s16DACReturn >= 0)
 		{
@@ -557,7 +566,7 @@ Lint16 s16THROTTLE__Write_All_HE_Throttle_Commands_to_DAC(Luint16 u16ThrottleCom
 
 // --- Write throttle command (in RPM) for HEx to the AMC7812 DAC over i2c ---
 
-Lint16 s16THROTTLE__Write_HEx_Throttle_Command_to_DAC(Luint16 u16ThrottleCommand, Luint8 u8EngineNumber)
+Lint16 s16FCU_THROTTLE__Write_HEx_Throttle_Command_to_DAC(Luint16 u16ThrottleCommand, Luint8 u8EngineNumber)
 {
 	// variable declarations
 
@@ -590,9 +599,12 @@ Lint16 s16THROTTLE__Write_HEx_Throttle_Command_to_DAC(Luint16 u16ThrottleCommand
 // --- Hold function ---
 // May or may not be needed depending on whether the command has to be written to the DAC again at each update
 
-Lint16 s16THROTTLE__Hold(void)
+Lint16 s16FCU_THROTTLE__Hold(void)
 {
 
+	Luint16 s16Return = 0;
+
+	return s16Return;
 }
 
 
