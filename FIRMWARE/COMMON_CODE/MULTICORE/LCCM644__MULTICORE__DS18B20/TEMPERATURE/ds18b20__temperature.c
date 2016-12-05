@@ -30,6 +30,41 @@ extern struct _strDS18B20 sDS18B20;
 //locals
 static void vDS18B20_TEMP__Scratch_To_Temp(Luint8 u8DSIndex, const Luint8 *pu8Scratch, Lfloat32 *pf32Temp);
 
+/***************************************************************************//**
+ * @brief
+ * Read the temperature from a device ONCE the conversion is complete
+ *
+ * @param[in]		u8DSIndex				The address index
+ * @return			0 = success\n
+ *					-ve = error
+ * 
+ * @param[in]		u8DSIndex		## Desc ##
+ * @st_funcMD5		AA39BBEC8AC2F71F753F69608659B42B
+ * @st_funcID		LCCM644R0.FILE.003.FUNC.006
+ */
+Lint16 s16DS18B20_TEMP__Read(Luint8 u8DSIndex)
+{
+	/*lint -e934*/
+	//Note 934: Taking address of near auto variable [MISRA 2004 Rule 1.2]
+	Lint16 s16Return;
+
+	//read the scratch
+	s16Return = s16DS18B20_SCRATCH__Read(u8DSIndex, &sDS18B20.u8TempScratch[0]);
+	if(s16Return >= 0)
+	{
+		//convert scratch RAM to a temperature
+		vDS18B20_TEMP__Scratch_To_Temp(u8DSIndex, &sDS18B20.u8TempScratch[0], &sDS18B20.sDevice[u8DSIndex].f32Temperature);
+
+	}
+	else
+	{
+		//fall through with error code
+	}
+
+
+	return s16Return;
+	/*lint +e934*/
+}
 
 /***************************************************************************//**
  * @brief
@@ -40,7 +75,7 @@ static void vDS18B20_TEMP__Scratch_To_Temp(Luint8 u8DSIndex, const Luint8 *pu8Sc
  * @param[in]		u8DSIndex				The address index
  * @return			0 = success\n
  *					-ve = error
- * @st_funcMD5		6140433336A0CA8489B98F68D99BCC2D
+ * @st_funcMD5		2A3FA2AC34982FD9EA9455F9CB0482D1
  * @st_funcID		LCCM644R0.FILE.003.FUNC.003
  */
 Lint16 s16DS18B20_TEMP__All_Request(Luint8 u8DSIndex, Luint8 u8Wait)
@@ -49,13 +84,15 @@ Lint16 s16DS18B20_TEMP__All_Request(Luint8 u8DSIndex, Luint8 u8Wait)
 	//Note 934: Taking address of near auto variable [MISRA 2004 Rule 1.2]
 	
 	Lint16 s16Return;
-	Luint8 u8Scratch[9U];
 
 	//generate a reset on the wire
 	s16Return = s16DS18B20_1WIRE__Generate_Reset(sDS18B20.sDevice[u8DSIndex].u8ChannelIndex);
 
 	//issue the skip command, no serial number needed.
 	s16Return =  s16DS18B20_1WIRE__Skip(sDS18B20.sDevice[u8DSIndex].u8ChannelIndex);
+
+	//start the convert
+	s16Return = s16DS18B20_1WIRE__WriteByte(sDS18B20.sDevice[u8DSIndex].u8ChannelIndex, 0x44U);
 
 	//wait for conversion?
 	if(u8Wait == 1U)
@@ -81,13 +118,7 @@ Lint16 s16DS18B20_TEMP__All_Request(Luint8 u8DSIndex, Luint8 u8Wait)
 
 		}//switch(sDS18B20.sDevice[u8DSIndex].u8Resolution)
 
-		//now that we have waited, read it
-
-
-		//read the scratch
-		s16Return = s16DS18B20_SCRATCH__Read(u8DSIndex, &u8Scratch[0]);
-
-		vDS18B20_TEMP__Scratch_To_Temp(u8DSIndex, &u8Scratch[0], &sDS18B20.sDevice[u8DSIndex].f32Temperature);
+		//now that we have waited, the user can read it
 
 		s16Return = 0;
 
@@ -96,6 +127,8 @@ Lint16 s16DS18B20_TEMP__All_Request(Luint8 u8DSIndex, Luint8 u8Wait)
 	{
 		//exit
 	}
+
+	//at this point here, either we are ready to read, or we have an error
 
 	return s16Return;
 	
@@ -113,7 +146,7 @@ Lint16 s16DS18B20_TEMP__All_Request(Luint8 u8DSIndex, Luint8 u8Wait)
  * @param[in]		u8DSIndex				The addressed index of the device.
  * @return			0 = success\n
  *					-ve = error
- * @st_funcMD5		90A173BE636B190FE2355EA7AF485384
+ * @st_funcMD5		89A3015EC826C995418FFAA3AA6466BA
  * @st_funcID		LCCM644R0.FILE.003.FUNC.004
  */
 Lint16 s16DS18B20_TEMP__Request(Luint8 u8DSIndex, Luint8 u8Wait)
@@ -121,7 +154,6 @@ Lint16 s16DS18B20_TEMP__Request(Luint8 u8DSIndex, Luint8 u8Wait)
 	/*lint -e934*/
 	//Note 934: Taking address of near auto variable [MISRA 2004 Rule 1.2]
 	Lint16 s16Return;
-	Luint8 u8Scratch[9];
 
 	//reset the one-wire
 	s16Return = s16DS18B20_1WIRE__Generate_Reset(sDS18B20.sDevice[u8DSIndex].u8ChannelIndex);
@@ -165,9 +197,9 @@ Lint16 s16DS18B20_TEMP__Request(Luint8 u8DSIndex, Luint8 u8Wait)
 
 
 					//read the scratch
-					s16Return = s16DS18B20_SCRATCH__Read(u8DSIndex, &u8Scratch[0]);
+					s16Return = s16DS18B20_SCRATCH__Read(u8DSIndex, &sDS18B20.u8TempScratch[0]);
 
-					vDS18B20_TEMP__Scratch_To_Temp(u8DSIndex, &u8Scratch[0], &sDS18B20.sDevice[u8DSIndex].f32Temperature);
+					vDS18B20_TEMP__Scratch_To_Temp(u8DSIndex, &sDS18B20.u8TempScratch[0], &sDS18B20.sDevice[u8DSIndex].f32Temperature);
 
 					s16Return = 0;
 
@@ -214,7 +246,7 @@ Lint16 s16DS18B20_TEMP__Request(Luint8 u8DSIndex, Luint8 u8Wait)
  * @param[out]		*pf32Temp				Pointer to return temperature value
  * @param[in]		*pu8Scratch				Pointer to scratchpad memory
  * @param[in]		u8DSIndex				Index of the device so as we know our resoltion
- * @st_funcMD5		9A0ED5AB3219331A1C1DC2C700DED3E6
+ * @st_funcMD5		65DE1541B347FC9CA29984F03A7B741D
  * @st_funcID		LCCM644R0.FILE.003.FUNC.005
  */
 void vDS18B20_TEMP__Scratch_To_Temp(Luint8 u8DSIndex, const Luint8 *pu8Scratch, Lfloat32 *pf32Temp)
@@ -226,34 +258,107 @@ void vDS18B20_TEMP__Scratch_To_Temp(Luint8 u8DSIndex, const Luint8 *pu8Scratch, 
 	{
 		Luint8 u8[2];
 		Lint16 s16;
+		Luint16 u16;
+	}unT, unT2;
+	Luint16 u16WholeCelcius;
+	Luint16 u16Fraction;
 
-	}unT;
 	/*lint +e960*/
 
 	//assign
-	unT.u8[0U] = pu8Scratch[0U];
-	unT.u8[1U] = pu8Scratch[1U];
+	#ifdef _WE_ARE_ON_MSP430_
+		unT.u8[0U] = pu8Scratch[0U];
+		unT.u8[1U] = pu8Scratch[1U];
+	#else
+		unT.u8[0U] = pu8Scratch[0U];
+		unT.u8[1U] = pu8Scratch[1U];
+	#endif
 
-	//todo, check teh "S" bit.
-
-
-	*pf32Temp = (Lfloat32)unT.s16;
+	//save off.
+	u16WholeCelcius = unT.u16;
 
 	//essentially the temp is in 1/16th of a degree for 12 but.
 	switch(sDS18B20.sDevice[u8DSIndex].u8Resolution)
 	{
 		case 12U:
+
+			//clear the undefined bits
+			//none
+			u16WholeCelcius >>= 0U;
+
+			//check for negative
+			if((unT.u16 & 0x8000U) == 0x8000U)
+			{
+				//two's complement
+				u16WholeCelcius ^= 0xFFFFU;
+				u16WholeCelcius += 1U;
+			}
+
+			unT2.u16 = u16WholeCelcius;
+
+			//raw conversion
+			*pf32Temp = (Lfloat32)unT2.s16;
 			*pf32Temp /= 16.0F;
+
 			break;
 		case 11U:
+
+			//clear undefined bits
+			u16WholeCelcius >>= 1U;
+
+			//check for negative
+			if((unT.u16 & 0x8000U) == 0x8000U)
+			{
+				//two's complement
+				u16WholeCelcius ^= 0xFFFFU;
+				u16WholeCelcius += 1U;
+			}
+
+			unT2.u16 = u16WholeCelcius;
+
+			//raw conversion
+			*pf32Temp = (Lfloat32)unT2.s16;
 			*pf32Temp /= 8.0F;
 			break;
+
 		case 10U:
+			//clear undefined bits
+			u16WholeCelcius >>= 2U;
+
+			//check for negative
+			if((unT.u16 & 0x8000U) == 0x8000U)
+			{
+				//two's complement
+				u16WholeCelcius ^= 0xFFFFU;
+				u16WholeCelcius += 1U;
+			}
+
+			unT2.u16 = u16WholeCelcius;
+
+			//raw conversion
+			*pf32Temp = (Lfloat32)unT2.s16;
 			*pf32Temp /= 4.0F;
 			break;
+
 		case 9U:
+			//clear undefined bits
+			u16WholeCelcius >>= 3U;
+
+			//check for negative
+			if((unT.u16 & 0x8000U) == 0x8000U)
+			{
+				//two's complement
+				u16WholeCelcius ^= 0xFFFFU;
+				u16WholeCelcius += 1U;
+			}
+
+			unT2.u16 = u16WholeCelcius;
+
+			//raw conversion
+			*pf32Temp = (Lfloat32)unT2.s16;
 			*pf32Temp /= 2.0F;
 			break;
+
 		default:
 			//set to 128C indicating a problem
 			*pf32Temp = 128.0F;
@@ -273,7 +378,7 @@ void vDS18B20_TEMP__Scratch_To_Temp(Luint8 u8DSIndex, const Luint8 *pu8Scratch, 
  * @param[in]		u8DSIndex				Already enumerated address ID
  * @return			0 = success\n
  *					-ve = error
- * @st_funcMD5		B97FF5A7F9DAABC011F2404905B8614A
+ * @st_funcMD5		79132391B133E345569932CFFF9C4316
  * @st_funcID		LCCM644R0.FILE.003.FUNC.002
  */
 Lint16 s16DS18B20_TEMP__Get_Resolution(Luint8 u8DSIndex, Luint8 *pu8Resolution)
@@ -282,14 +387,12 @@ Lint16 s16DS18B20_TEMP__Get_Resolution(Luint8 u8DSIndex, Luint8 *pu8Resolution)
 	//Note 934: Taking address of near auto variable [MISRA 2004 Rule 1.2]
 
 	Lint16 s16Return;
-	Luint8 u8Scratch[9U];
-
 
 	//read the scratch
-	s16Return = s16DS18B20_SCRATCH__Read(u8DSIndex, &u8Scratch[0]);
+	s16Return = s16DS18B20_SCRATCH__Read(u8DSIndex, &sDS18B20.u8TempScratch[0]);
 
 	//determine from the scratchpad
-	switch(u8Scratch[4U])
+	switch(sDS18B20.u8TempScratch[4U])
 	{
 
 		case 0x7FU:
@@ -325,7 +428,7 @@ Lint16 s16DS18B20_TEMP__Get_Resolution(Luint8 u8DSIndex, Luint8 *pu8Resolution)
  * @param[in]		u8DSIndex				Device index address
  * @return			0 = success\n
  *					-ve = error
- * @st_funcMD5		A4C1E4D505C049983604EE4E068E1DCC
+ * @st_funcMD5		AA30E950FFA1C69214EC088D9D467661
  * @st_funcID		LCCM644R0.FILE.003.FUNC.001
  */
 Lint16 s16DS18B20_TEMP__Set_Resolution(Luint8 u8DSIndex, Luint8 u8Resolution)
@@ -333,41 +436,50 @@ Lint16 s16DS18B20_TEMP__Set_Resolution(Luint8 u8DSIndex, Luint8 u8Resolution)
 	/*lint -e934*/
 	//Note 934: Taking address of near auto variable [MISRA 2004 Rule 1.2]
 	Lint16 s16Return;
-	Luint8 u8Scratch[9U];
+	Luint8 u8CRC;
 
 	//read the scratch
-	s16Return = s16DS18B20_SCRATCH__Read(u8DSIndex, &u8Scratch[0]);
+	s16Return = s16DS18B20_SCRATCH__Read(u8DSIndex, &sDS18B20.u8TempScratch[0]);
 
-	//todo, check CRC
-
-	//configure the new resolution in the scratchpad
-	switch(u8Resolution)
+	//check CRC
+	u8CRC = u8DS18B20_SCRATCH__Compute_CRC(&sDS18B20.u8TempScratch[0]);
+	if(u8CRC == sDS18B20.u8TempScratch[8])
 	{
-		case 12:
-			u8Scratch[4U] = 0x7FU;
-			break;
+		//configure the new resolution in the scratchpad
+		switch(u8Resolution)
+		{
+			case 12:
+				sDS18B20.u8TempScratch[4U] = 0x7FU;
+				break;
 
-		case 11:
-			u8Scratch[4U] = 0x5FU;
-			break;
+			case 11:
+				sDS18B20.u8TempScratch[4U] = 0x5FU;
+				break;
 
-		case 10:
-			u8Scratch[4U] = 0x3FU;
-			break;
+			case 10:
+				sDS18B20.u8TempScratch[4U] = 0x3FU;
+				break;
 
-		case 9:
-			u8Scratch[4U] = 0x1FU;
-			break;
+			case 9:
+				sDS18B20.u8TempScratch[4U] = 0x1FU;
+				break;
 
-		default:
-			//default at 12bit
-			u8Scratch[4U] = 0x7FU;
-			break;
+			default:
+				//default at 12bit
+				sDS18B20.u8TempScratch[4U] = 0x7FU;
+				break;
 
-	}//switch(u8Resolution)
+		}//switch(u8Resolution)
 
-	//update the scratchpad
-	s16Return = s16DS18B20_SCRATCH__Write(u8DSIndex, &u8Scratch[0]);
+		//update the scratchpad
+		s16Return = s16DS18B20_SCRATCH__Write(u8DSIndex, &sDS18B20.u8TempScratch[0]);
+	}
+	else
+	{
+		//todo, log error
+		//CRC FAULT
+		s16Return = -2;
+	}
 
 	return s16Return;
 	/*lint +e934*/

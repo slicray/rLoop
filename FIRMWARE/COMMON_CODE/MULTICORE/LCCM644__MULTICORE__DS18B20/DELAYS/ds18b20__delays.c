@@ -30,7 +30,7 @@
  * microsecond delay.
  * 
  * @param[in]		u32Value				Delay Value
- * @st_funcMD5		49782D0D32EAE7FA4DE6100C744D6566
+ * @st_funcMD5		C5B51A6F0B2B1DFB69FD860961D93C94
  * @st_funcID		LCCM644R0.FILE.008.FUNC.001
  */
 void vDS18B20_DELAYS__Delay_uS(Luint32 u32Value)
@@ -39,6 +39,8 @@ void vDS18B20_DELAYS__Delay_uS(Luint32 u32Value)
 		vRM4_DELAYS__Delay_uS(u32Value);
 	#elif C_LOCALDEF__LCCM644__USE_ON_XILINX == 1U
 		vXILINX_DELAYS__Delay_uS(u32Value);
+	#elif C_LOCALDEF__LCCM644__USE_ON_MSP430 == 1U
+		vMSP430_DELAYS__Delay_uS(u32Value);
 	#else
 		#error
 	#endif
@@ -49,7 +51,7 @@ void vDS18B20_DELAYS__Delay_uS(Luint32 u32Value)
  * millisecond delay
  * 
  * @param[in]		u32Value				Delay value
- * @st_funcMD5		7C43316DD186DFA88546E51F8F144552
+ * @st_funcMD5		08E66B0ECE030E1EEBF0F32B68AEF750
  * @st_funcID		LCCM644R0.FILE.008.FUNC.002
  */
 void vDS18B20_DELAYS__Delay_mS(Luint32 u32Value)
@@ -58,6 +60,8 @@ void vDS18B20_DELAYS__Delay_mS(Luint32 u32Value)
 		vRM4_DELAYS__Delay_mS(u32Value);
 	#elif C_LOCALDEF__LCCM644__USE_ON_XILINX == 1U
 		vXILINX_DELAYS__Delay_mS(u32Value);
+	#elif C_LOCALDEF__LCCM644__USE_ON_MSP430 == 1U
+		vMSP430_DELAYS__Delay_mS(u32Value);
 	#else
 		#error
 	#endif

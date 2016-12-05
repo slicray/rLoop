@@ -53,7 +53,7 @@ void vDS2482S_LOWLEVEL__Init(Luint8 u8DeviceIndex)
  * @param[in]		u8DeviceIndex			Device index on the bus
  * @return			0 = success\n
  *					-ve = error
- * @st_funcMD5		D536F98D5ACAB3C3191814F7A8D28D10
+ * @st_funcMD5		C08FEB01EB95C3FCD26306F0583CCA18
  * @st_funcID		LCCM641R0.FILE.005.FUNC.002
  */
 Lint16 s16DS2482S_LOWLEVEL__TxReg(Luint8 u8DeviceIndex, E_DS2482_REGS eRegister)
@@ -66,7 +66,7 @@ Lint16 s16DS2482S_LOWLEVEL__TxReg(Luint8 u8DeviceIndex, E_DS2482_REGS eRegister)
 	//Violates MISRA 2004 Required Rule 10.5, Operators '~' and '<<' require recasting to underlying type for sub-integers
 
 	//Bus Free Time Between a STOP and START Condition, need 2us
-	vRM4_DELAYS__Delay_uS(2U);
+	vDS18B20_DELAYS__Delay_uS(2U);
 
 	//setup the device address
 	//Devices should be addressed by AD[00] to AD[11] pins in hardware
@@ -77,6 +77,18 @@ Lint16 s16DS2482S_LOWLEVEL__TxReg(Luint8 u8DeviceIndex, E_DS2482_REGS eRegister)
 
 	//do the actual write
 	#if C_LOCALDEF__LCCM641__USE_ON_RM4 == 1U
+		s16R = M_LOCALDEF__LCCM641__I2C_TX_REG(u8Addx, (Luint8)eRegister);
+
+		//we should convert here the I2C layer reuturns to our own returns
+		if(s16R < 0)
+		{
+			s16Return = -1;
+		}
+		else
+		{
+			s16Return = 0;
+		}
+	#elif C_LOCALDEF__LCCM641__USE_ON_MSP430 == 1U
 		s16R = M_LOCALDEF__LCCM641__I2C_TX_REG(u8Addx, (Luint8)eRegister);
 
 		//we should convert here the I2C layer reuturns to our own returns
@@ -107,7 +119,7 @@ Lint16 s16DS2482S_LOWLEVEL__TxReg(Luint8 u8DeviceIndex, E_DS2482_REGS eRegister)
  * @param[in]		u8DeviceIndex			The I2C device index
  * @return			0 = success\n
  *					-ve = error
- * @st_funcMD5		2ACA3147B62B9EA48295A501A229D1D9
+ * @st_funcMD5		C2AEAE98623C9D28C0E75AB6CD439B87
  * @st_funcID		LCCM641R0.FILE.005.FUNC.003
  */
 Lint16 s16DS2482S_LOWLEVEL__RxReg(Luint8 u8DeviceIndex, Luint8 *pu8Data)
@@ -120,7 +132,7 @@ Lint16 s16DS2482S_LOWLEVEL__RxReg(Luint8 u8DeviceIndex, Luint8 *pu8Data)
 	//Violates MISRA 2004 Required Rule 10.5, Operators '~' and '<<' require recasting to underlying type for sub-integers
 
 	//Bus Free Time Between a STOP and START Condition, need 2us
-	vRM4_DELAYS__Delay_uS(2U);
+	vDS18B20_DELAYS__Delay_uS(2U);
 
 	//setup the device address
 	//Devices should be addressed by AD[00] to AD[11] pins in hardware
@@ -133,6 +145,18 @@ Lint16 s16DS2482S_LOWLEVEL__RxReg(Luint8 u8DeviceIndex, Luint8 *pu8Data)
 
 	//do the actual write
 	#if C_LOCALDEF__LCCM641__USE_ON_RM4 == 1U
+		s16R = M_LOCALDEF__LCCM641__I2C_RX_REG(u8Addx, pu8Data);
+
+		//we should convert here the I2C layer reuturns to our own returns
+		if(s16R < 0)
+		{
+			s16Return = -1;
+		}
+		else
+		{
+			s16Return = 0;
+		}
+	#elif C_LOCALDEF__LCCM641__USE_ON_MSP430 == 1U
 		s16R = M_LOCALDEF__LCCM641__I2C_RX_REG(u8Addx, pu8Data);
 
 		//we should convert here the I2C layer reuturns to our own returns
@@ -161,7 +185,7 @@ Lint16 s16DS2482S_LOWLEVEL__RxReg(Luint8 u8DeviceIndex, Luint8 *pu8Data)
  * @param[in]		u8DeviceIndex			Device index on the bus.
  * @return			0 = success\n
  *					-ve = error
- * @st_funcMD5		4F5B9DF104F6BFCDBCA82B26C2704C74
+ * @st_funcMD5		FD6924149A1B238D92247783C79AE570
  * @st_funcID		LCCM641R0.FILE.005.FUNC.004
  */
 Lint16 s16DS2482S_LOWLEVEL__WriteReg(Luint8 u8DeviceIndex, E_DS2482_REGS eRegister, Luint8 u8Value)
@@ -174,7 +198,7 @@ Lint16 s16DS2482S_LOWLEVEL__WriteReg(Luint8 u8DeviceIndex, E_DS2482_REGS eRegist
 	//Violates MISRA 2004 Required Rule 10.5, Operators '~' and '<<' require recasting to underlying type for sub-integers
 
 	//Bus Free Time Between a STOP and START Condition, need 2us
-	vRM4_DELAYS__Delay_uS(2U);
+	vDS18B20_DELAYS__Delay_uS(2U);
 
 	//setup the device address
 	//Devices should be addressed by AD[00] to AD[11] pins in hardware
@@ -187,6 +211,18 @@ Lint16 s16DS2482S_LOWLEVEL__WriteReg(Luint8 u8DeviceIndex, E_DS2482_REGS eRegist
 
 	//do the actual write
 	#if C_LOCALDEF__LCCM641__USE_ON_RM4 == 1U
+		s16R = M_LOCALDEF__LCCM641__I2C_TX_BYTE(u8Addx, (Luint8)eRegister, u8Value);
+
+		//we should convert here the I2C layer reuturns to our own returns
+		if(s16R < 0)
+		{
+			s16Return = -1;
+		}
+		else
+		{
+			s16Return = 0;
+		}
+	#elif C_LOCALDEF__LCCM641__USE_ON_MSP430 == 1U
 		s16R = M_LOCALDEF__LCCM641__I2C_TX_BYTE(u8Addx, (Luint8)eRegister, u8Value);
 
 		//we should convert here the I2C layer reuturns to our own returns
@@ -214,7 +250,7 @@ Lint16 s16DS2482S_LOWLEVEL__WriteReg(Luint8 u8DeviceIndex, E_DS2482_REGS eRegist
  * @param[in]		u8DeviceIndex			Device index on the bus
  * @return			0 = success\n
  *					-ve = error
- * @st_funcMD5		29D34C25CE0177FAEC9D72506979CD1D
+ * @st_funcMD5		7A8803D447E394E96E9561CD82676185
  * @st_funcID		LCCM641R0.FILE.005.FUNC.005
  */
 Lint16 s16DS2482S_LOWLEVEL__ReadReg(Luint8 u8DeviceIndex, E_DS2482_REGS eRegister, Luint8 *pu8Value)
@@ -227,7 +263,7 @@ Lint16 s16DS2482S_LOWLEVEL__ReadReg(Luint8 u8DeviceIndex, E_DS2482_REGS eRegiste
 	//Violates MISRA 2004 Required Rule 10.5, Operators '~' and '<<' require recasting to underlying type for sub-integers
 
 	//Bus Free Time Between a STOP and START Condition, need 2us
-	vRM4_DELAYS__Delay_uS(2U);
+	vDS18B20_DELAYS__Delay_uS(2U);
 
 	//setup the device address
 	//Devices should be addressed by AD[00] to AD[11] pins in hardware
@@ -240,6 +276,18 @@ Lint16 s16DS2482S_LOWLEVEL__ReadReg(Luint8 u8DeviceIndex, E_DS2482_REGS eRegiste
 
 	//do the actual write
 	#if C_LOCALDEF__LCCM641__USE_ON_RM4 == 1U
+		s16R = M_LOCALDEF__LCCM641__I2C_RX_BYTE(u8Addx, (Luint8)eRegister, pu8Value);
+
+		//we should convert here the I2C layer reuturns to our own returns
+		if(s16R < 0)
+		{
+			s16Return = -1;
+		}
+		else
+		{
+			s16Return = 0;
+		}
+	#elif C_LOCALDEF__LCCM641__USE_ON_MSP430 == 1U
 		s16R = M_LOCALDEF__LCCM641__I2C_RX_BYTE(u8Addx, (Luint8)eRegister, pu8Value);
 
 		//we should convert here the I2C layer reuturns to our own returns

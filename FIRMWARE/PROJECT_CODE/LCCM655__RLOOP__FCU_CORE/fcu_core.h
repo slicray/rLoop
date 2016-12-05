@@ -75,6 +75,12 @@
 					 */
 					Luint8 u8EdgeSeen;
 
+					#if C_LOCALDEF__LCCM655__ENABLE_DEBUG_BRAKES == 1U
+						/** Debugs how many interrupts have been received
+						 */
+						Luint32 u8EdgeSeenCnt;
+					#endif
+
 					/** The program index for N2HET, even if not used on both channels */
 					Luint16 u16N2HET_Prog;
 
@@ -89,6 +95,9 @@
 				{
 					/** This is the sample from the ADC converter */
 					Luint16 u16ADC_Sample;
+
+					/** This is the filtered result from the raw sample */
+					Luint16 u16ADC_FilteredSample;
 
 					/** The zero value when the brakes are fully retracted */
 					Luint16 u16ADC_Zero;
@@ -114,7 +123,13 @@
 					/** Highest MLP Value				 */
 					Luint16 highest_value;
 
+					#if C_LOCALDEF__LCCM655__ENABLE_DEBUG_BRAKES == 1U
+						/** Debug how many times we get a zero */
+						Luint32 zero_count;
+					#endif
 
+					/** Temporary use; identify when startup sequence has ended and mlp won't return 0. */
+					Luint8 u8Running;
 				}sMLP;
 
 
@@ -154,9 +169,10 @@
 				}sCurrent;
 
 
-
 				/** individual brake fault flags */
 				FAULT_TREE__PUBLIC_T sFaultFlags;
+
+				Luint8 u8BrakeSWErr;
 
 			}sBrakes[C_FCU__NUM_BRAKES];
 
@@ -258,6 +274,16 @@
 
 			}sLasers;
 
+			/** Ethernet comms structure */
+			struct
+			{
+				/** our hardware MAC */
+				Luint8 u8MACAddx[6];
+
+				/** our locally assigned IP*/
+				Luint8 u8IPAddx[4];
+
+			}sEthernet;
 
 
 			/** Structure guard 2*/
@@ -273,6 +299,13 @@
 		DLL_DECLARATION void vFCU__Process(void);
 		void vFCU__RTI_100MS_ISR(void);
 		void vFCU__RTI_10MS_ISR(void);
+
+		//network
+		void vFCU_NET__Init(void);
+		void vFCU_NET__Process(void);
+		Luint8 u8FCU_NET__Is_LinkUp(void);
+		void vFCU_NET_RX__RxUDP(Luint8 * pu8Buffer, Luint16 u16Length, Luint16 u16DestPort);
+		void vFCU_NET_RX__RxSafeUDP(Luint8 *pu8Payload, Luint16 u16PayloadLength, Luint16 ePacketType, Luint16 u16DestPort, Luint16 u16Fault);
 
 		//fault handling layer
 		void vFCU_FAULTS__Init(void);
@@ -305,24 +338,26 @@
 		Lfloat32 f32FCU_BRAKES__Get_IBeam_mm(E_FCU__BRAKE_INDEX_T eBrake);
 		Lfloat32 f32FCU_BRAKES__Get_MLP_mm(E_FCU__BRAKE_INDEX_T eBrake);
 
-			//stepper drive
-			void vFCU_BRAKES_STEP__Init(void);
-			void vFCU_BRAKES_STEP__Process(void);
-			void vFCU_BRAKES_STEP__Move(Lint32 s32Brake0Pos, Lint32 s32Brake1Pos);
-			Lint32 s32FCU_BRAKES__Get_CurrentPos(E_FCU__BRAKE_INDEX_T eBrake);
+		//stepper drive
+		void vFCU_BRAKES_STEP__Init(void);
+		void vFCU_BRAKES_STEP__Process(void);
+		void vFCU_BRAKES_STEP__Move(Lint32 s32Brake0Pos, Lint32 s32Brake1Pos);
+		Lint32 s32FCU_BRAKES__Get_CurrentPos(E_FCU__BRAKE_INDEX_T eBrake);
 
-			//brake switches
-			void vFCU_BRAKES_SW__Init(void);
-			void vFCU_BRAKES_SW__Left_SwitchExtend_ISR(void);
-			void vFCU_BRAKES_SW__Left_SwitchRetract_ISR(void);
-			void vFCU_BRAKES_SW__Right_SwitchExtend_ISR(void);
-			void vFCU_BRAKES_SW__Right_SwitchRetract_ISR(void);
-			E_FCU__SWITCH_STATE_T eFCU_BRAKES_SW__Get_Switch(E_FCU__BRAKE_INDEX_T eBrake, E_FCU__BRAKE_LIMSW_INDEX_T eSwitch);
+		//brake switches
+		void vFCU_BRAKES_SW__Init(void);
+		void vFCU_BRAKES_SW__Process(void);
+		void vFCU_BRAKES_SW__Left_SwitchExtend_ISR(void);
+		void vFCU_BRAKES_SW__Left_SwitchRetract_ISR(void);
+		void vFCU_BRAKES_SW__Right_SwitchExtend_ISR(void);
+		void vFCU_BRAKES_SW__Right_SwitchRetract_ISR(void);
+		E_FCU__SWITCH_STATE_T eFCU_BRAKES_SW__Get_Switch(E_FCU__BRAKE_INDEX_T eBrake, E_FCU__BRAKE_LIMSW_INDEX_T eSwitch);
+		Luint8 u8FCU_BRAKES_SW__Get_FaultFlag(E_FCU__BRAKE_INDEX_T eBrake);
 
 
-			//brakes MLP sensor
-			void vFCU_BRAKES_MLP__Init(void);
-			void vFCU_BRAKES_MLP__Process(void);
+		//brakes MLP sensor
+		void vFCU_BRAKES_MLP__Init(void);
+		void vFCU_BRAKES_MLP__Process(void);
 
 		//accelerometer layer
 		void vFCU_ACCEL__Init(void);

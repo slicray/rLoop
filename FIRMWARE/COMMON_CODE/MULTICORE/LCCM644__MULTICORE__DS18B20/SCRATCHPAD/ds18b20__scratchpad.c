@@ -26,6 +26,7 @@
 
 extern struct _strDS18B20 sDS18B20;
 
+
 /***************************************************************************//**
  * @brief
  * Write to the scratch pad, and then commit to the device
@@ -126,7 +127,7 @@ Lint16 s16DS18B20_SCRATCH__Write(Luint8 u8DSIndex, const Luint8 *pu8Scratch)
  * @param[in]		u8DSIndex				The index of the DS2482 device ROM serial number
  * @return			0 = success\n
  * 					-ve = error
- * @st_funcMD5		BB4F8A36658D40C30111C7BC85C12AAE
+ * @st_funcMD5		F5C21A2413EB188C980C35D9929417EC
  * @st_funcID		LCCM644R0.FILE.004.FUNC.001
  */
 Lint16 s16DS18B20_SCRATCH__Read(Luint8 u8DSIndex, Luint8 *pu8Scratch)
@@ -134,6 +135,7 @@ Lint16 s16DS18B20_SCRATCH__Read(Luint8 u8DSIndex, Luint8 *pu8Scratch)
 
 	Lint16 s16Return;
 	Luint8 u8Counter;
+	Luint8 u8CRC;
 
 	//reset the one-wire
 	s16Return = s16DS18B20_1WIRE__Generate_Reset(sDS18B20.sDevice[u8DSIndex].u8ChannelIndex);
@@ -185,11 +187,88 @@ Lint16 s16DS18B20_SCRATCH__Read(Luint8 u8DSIndex, Luint8 *pu8Scratch)
 
 	//reset again
 	s16Return = s16DS18B20_1WIRE__Generate_Reset(sDS18B20.sDevice[u8DSIndex].u8ChannelIndex);
+	if(s16Return >= 0)
+	{
+
+		//check the CRC
+		u8CRC = u8DS18B20_SCRATCH__Compute_CRC(pu8Scratch);
+
+		if(u8CRC != pu8Scratch[8U])
+		{
+			//CRC fault
+			s16Return = -10;
+		}
+		else
+		{
+			//good
+			s16Return = 0;
+		}
+
+	}
+	else
+	{
+		//fault fall on
+	}
+
 
 	return s16Return;
 }
 
+/***************************************************************************//**
+ * @brief
+ * compute the CRC on the scratch pad
+ *
+ * @note
+ * http://pdfserv.maximintegrated.com/en/an/AN27.pdf
+ * 
+ * @param[in]		*pu8Scratch				Pointer to the scratch ram buffer
+ * @return			The computed CRC
+ * @st_funcMD5		AEAF986D7CBDBAA8D8CD0B4C903D15DE
+ * @st_funcID		LCCM644R0.FILE.004.FUNC.003
+ */
+Luint8 u8DS18B20_SCRATCH__Compute_CRC(Luint8 *pu8Scratch)
+{
 
+	Luint8 u8ByteCounter;
+	Luint8 u8BitCounter;
+	Luint8 u8CRC;
+	Luint8 u8Current;
+	Luint8 u8Test;
+
+	//init
+	u8CRC = 0U;
+
+	//go through each of the 8 bytes
+	//scratch is 9 bytes, but the last byte is the actual CRC.
+	for(u8ByteCounter = 0U; u8ByteCounter < 8U; u8ByteCounter++)
+	{
+		//get a copy of the current byte
+		u8Current = pu8Scratch[u8ByteCounter];
+
+		for(u8BitCounter = 0U; u8BitCounter < 8U; u8BitCounter++)
+		{
+			//compute
+			u8Test = (u8CRC ^ u8Current) & 0x01U;
+
+			//move across
+			u8CRC >>= 0x01U;
+
+			//see if we are a 1
+			if(u8Test != 0x00U)
+			{
+				u8CRC ^= 0x8CU;
+			}
+
+			//shift
+			u8Current >>= 0x01U;
+
+		}//for(u8BitCounter = 0U; u8BitCounter < 8U; u8BitCounter++)
+
+	}//for(u8ByteCounter = 0U; u8ByteCounter < 8U; u8ByteCounter++)
+
+	return u8CRC;
+
+}
 
 
 #endif //#if C_LOCALDEF__LCCM644__ENABLE_THIS_MODULE == 1U

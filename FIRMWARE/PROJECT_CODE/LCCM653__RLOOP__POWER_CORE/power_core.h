@@ -11,6 +11,9 @@
 	#include <localdef.h>
 	#if C_LOCALDEF__LCCM653__ENABLE_THIS_MODULE == 1U
 
+		/*******************************************************************************
+		Includes
+		*******************************************************************************/
 		#include <LCCM653__RLOOP__POWER_CORE/PI_COMMS/power_core__pi_comms__types.h>
 		#include <LCCM653__RLOOP__POWER_CORE/power_core__state_types.h>
 
@@ -26,9 +29,6 @@
 		/*******************************************************************************
 		Defines
 		*******************************************************************************/
-
-
-
 
 
 		/*******************************************************************************
@@ -116,6 +116,23 @@
 			}sWIN32;
 
 #endif
+			/** Ethernet comms structure */
+			struct
+			{
+				/** our hardware MAC */
+				Luint8 u8MACAddx[6];
+
+				/** our locally assigned IP*/
+				Luint8 u8IPAddx[4];
+
+				/** 10ms timer tick */
+				Luint8 u810MS_Timer;
+
+				/** main state machine */
+				E_PWRNODE_NET__MAIN_STATES eMainState;
+
+			}sEthernet;
+
 			//lower structure guarding
 			Luint32 u32Guard2;
 
@@ -133,6 +150,14 @@
 		//fault subsystem
 		void vPWRNODE_FAULTS__Init(void);
 		void vPWRNODE_FAULTS__Process(void);
+
+		//networking
+		void vPWRNODE_NET__Init(void);
+		void vPWRNODE_NET__Process(void);
+		void vPWRNODE_NET__10MS_ISR(void);
+		Luint8 u8PWRNODE_NET__Is_LinkUp(void);
+		void vPWRNODE_NET_RX__RxUDP(Luint8 *pu8Buffer, Luint16 u16Length, Luint16 u16DestPort);
+		void vPWRNODE_NET_RX__RxSafeUDP(Luint8 *pu8Payload, Luint16 u16PayloadLength, Luint16 ePacketType, Luint16 u16DestPort, Luint16 u16Fault);
 
 		//main application state machine
 		void vPWRNODE_SM__Init(void);

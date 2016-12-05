@@ -133,6 +133,11 @@ void vPWRNODE__Process(void)
 			//get the I2C up for the networked sensors
 			vRM4_I2C_USER__Init();
 #endif
+			//startup the ethernet
+			#if C_LOCALDEF__LCCM653__ENABLE_ETHERNET == 1U
+				vPWRNODE_NET__Init();
+			#endif
+
 			//move to next state
 			//if we have the batt temp system enabled (DS18B20) then start the cell temp system
 			sPWRNODE.sInit.eState = INIT_STATE__DC_CONVERTER;
@@ -312,6 +317,15 @@ void vPWRNODE__Process(void)
 	}//switch(sPWRNODE.sInit.eState)
 
 
+	if(sPWRNODE.sInit.eState > INIT_STATE__COMMS)
+	{
+		//process the ethernet.
+		#if C_LOCALDEF__LCCM653__ENABLE_ETHERNET == 1U
+			vPWRNODE_NET__Process();
+		#endif
+
+	}
+
 }
 
 //100ms timer
@@ -331,8 +345,26 @@ void vPWRNODE__RTI_100MS_ISR(void)
 //10ms timer
 void vPWRNODE__RTI_10MS_ISR(void)
 {
+	#if C_LOCALDEF__LCCM653__ENABLE_BATT_TEMP == 1U
+		#if C_LOCALDEF__LCCM644__USE_10MS_ISR == 1U
+			vDS18B20__10MS_ISR();
+		#endif
+	#endif
+
+	#if C_LOCALDEF__LCCM653__ENABLE_ETHERNET == 1U
+		vPWRNODE_NET__10MS_ISR();
+	#endif
 
 }
+
+
+//safetys
+#ifndef C_LOCALDEF__LCCM653__ENABLE_ETHERNET
+	#error
+#endif
+#ifndef C_LOCALDEF__LCCM653__ENABLE_BATT_TEMP
+	#error
+#endif
 
 #endif //#if C_LOCALDEF__LCCM653__ENABLE_THIS_MODULE == 1U
 //safetys
