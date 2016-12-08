@@ -20,9 +20,28 @@
 		Defines
 		*******************************************************************************/
 
-#define DAC_OUT_MAX_MVOLTS 		5000		// DAC output voltage limit
-#define DAC_OUT_MIN_MVOLTS 		0		// DAC output voltage limit
-#define NUM_DAC_CHANNELS		(12U)
+		#define DAC_OUT_MAX_MVOLTS 		5000		// DAC output voltage limit
+		#define DAC_OUT_MIN_MVOLTS 		0		// DAC output voltage limit
+		#define NUM_DAC_CHANNELS		(12U)
+
+		// AMC7812 external control pins driven by RM48 N2HET1 and GIOA pins
+
+        #define RM48_N2HET1_PIN__AMC7812_HW_RESET      	(18U)
+
+        #define RM48_N2HET1_PIN__AMC7812_CLR0      		(16U)
+        #define RM48_N2HET1_PIN__AMC7812_CLR1      		(17U)
+        #define RM48_N2HET1_PIN__AMC7812_CNVT      		(19U)
+        #define RM48_GIOA_PIN__AMC7812_DAV      		(5U)
+
+		// power-down register address; see AMC7812 datasheet, Table 10, p. 50
+
+		#define AMC7812_REG_ADR__PWR_DWN				0x6B
+
+		// GPIO pin address
+
+		#define AMC7812_REG_ADR__GPIO 					0x4B
+
+		#define NUM_GPIO_PINS							(8U)
 
 
 		// enum type for DAC 16-bit data registers

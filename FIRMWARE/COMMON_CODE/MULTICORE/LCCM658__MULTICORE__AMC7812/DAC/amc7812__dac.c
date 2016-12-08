@@ -67,7 +67,9 @@ Luint16 vAMC7812_DAC__Process(void)
 
 	// declarations
 
+	Luint8 u8ReturnVal;
 	Lint16 s16Return;
+	Luint16 u16PowerDownRegBitValues;
 
 	// initialize
 
@@ -92,11 +94,59 @@ Luint16 vAMC7812_DAC__Process(void)
 
 			// software reset
 
-			s16Return = -1;
-			s16Return = s16AMC7812_I2C__TxCommand(C_LOCALDEF__LCCM658__BUS_ADDX, AMC7812_DAC_REG__SW_RESET);
+			//s16Return = -1;
+			//s16Return = s16AMC7812_I2C__TxCommand(C_LOCALDEF__LCCM658__BUS_ADDX, AMC7812_DAC_REG__SW_RESET);
 
-			if (s16Return >= 0)
+			// Hardware reset
+
+			// first, set the pin direction
+
+			vRM4_N2HET_PINS__Set_PinDirection_Output(N2HET_CHANNEL__1, RM48_N2HET1_PIN__AMC7812_HW_RESET);
+
+			// To reset the device, create a pulse:
+
+			// first check the value of the pin
+
+			u8ReturnVal = u8RM4_N2HET_PINS__Get_Pin(N2HET_CHANNEL__1, RM48_N2HET1_PIN__AMC7812_HW_RESET);
+
+			if(u8ReturnVal == 0U)
 			{
+				// if the pin is low, set the pin high and wait
+
+				vRM4_N2HET_PINS__Set_PinHigh(N2HET_CHANNEL__1, RM48_N2HET1_PIN__AMC7812_HW_RESET);
+				//vRM4_N2HET_PINS__Set_Pin(N2HET_CHANNEL__1, u32Bit, u32Value);
+
+				vRM4_DELAYS__Delay_uS(100U);
+			}
+			else
+			{
+				// ok
+			}
+
+			// set the pin low, wait, set the pin high, and wait
+
+			vRM4_N2HET_PINS__Set_PinLow(N2HET_CHANNEL__1, RM48_N2HET1_PIN__AMC7812_HW_RESET);
+
+			vRM4_DELAYS__Delay_uS(100U);
+
+			vRM4_N2HET_PINS__Set_PinHigh(N2HET_CHANNEL__1, RM48_N2HET1_PIN__AMC7812_HW_RESET);
+
+			vRM4_DELAYS__Delay_uS(100U);
+
+			// check the value of the pin
+
+			u8ReturnVal = u8RM4_N2HET_PINS__Get_Pin(N2HET_CHANNEL__1, RM48_N2HET1_PIN__AMC7812_HW_RESET);
+
+
+			if (u8ReturnVal == 1U)
+			{
+				// reset successful,
+				// set the power-down register to activate the DAC pins
+
+				u16PowerDownRegBitValues = 0x1FFE;
+
+				s16Return = s16AMC7812_I2C__WriteU16(C_LOCALDEF__LCCM658__BUS_ADDX, AMC7812_REG_ADR__PWR_DWN, u16PowerDownRegBitValues);
+
 				// reset successful, change state
 
 				strAMC7812_DAC.eState = AMC7812_DAC_STATE__IDLE;

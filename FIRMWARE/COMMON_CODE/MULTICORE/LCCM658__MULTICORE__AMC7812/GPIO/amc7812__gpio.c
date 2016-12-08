@@ -25,10 +25,6 @@
 #include "../amc7812.h"
 #if C_LOCALDEF__LCCM658__ENABLE_THIS_MODULE == 1U
 
-// GPIO pin address
-#define AMC7812_REG_ADR__GPIO 	(0x4B)
-
-#define NUM_GPIO_PINS			(8U)
 #define LOOP_COUNTER_LIMIT		(10000000U)
 
 /***************************************************************************//**
