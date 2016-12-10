@@ -41,6 +41,10 @@
 
 		#define AMC7812_REG_ADR__GPIO 					0x4B
 
+		// Device ID address
+
+		#define AMC7812_REG_ADR__DEV_ID					0x6C
+
 		#define NUM_GPIO_PINS							(8U)
 
 
@@ -168,6 +172,7 @@
 		Lint16 s16AMC7812_I2C__WriteU16(Luint8 u8DeviceAddx, Luint8 u8RegisterAddx, Luint16 u16Value);
 		Lint16 s16AMC7812_I2C__TxCommand(Luint8 u8DeviceAddx, Luint8 u8RegisterAddx);
 		Lint16 s16AMC7812_DAC__SetPinVoltage(void);
+		Lint16 s16AMC7812_I2C__ReadU16(Luint8 u8DeviceAddx, Luint8 u8RegAddx, Luint16 *pu16Value);
 		
 		//ADC
 		void vAMC7812_ADC__Init(void);

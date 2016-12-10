@@ -70,6 +70,7 @@ Luint16 vAMC7812_DAC__Process(void)
 	Luint8 u8ReturnVal;
 	Lint16 s16Return;
 	Luint16 u16PowerDownRegBitValues;
+	Luint16 u16DeviceIDAddr;
 
 	// initialize
 
@@ -94,7 +95,7 @@ Luint16 vAMC7812_DAC__Process(void)
 
 			// software reset
 
-			//s16Return = -1;
+			s16Return = -1;
 			//s16Return = s16AMC7812_I2C__TxCommand(C_LOCALDEF__LCCM658__BUS_ADDX, AMC7812_DAC_REG__SW_RESET);
 
 			// Hardware reset
@@ -136,6 +137,10 @@ Luint16 vAMC7812_DAC__Process(void)
 			// check the value of the pin
 
 			u8ReturnVal = u8RM4_N2HET_PINS__Get_Pin(N2HET_CHANNEL__1, RM48_N2HET1_PIN__AMC7812_HW_RESET);
+
+			// check the device address
+
+			s16Return = s16AMC7812_I2C__ReadU16(C_LOCALDEF__LCCM658__BUS_ADDX, AMC7812_REG_ADR__DEV_ID, &u16DeviceIDAddr);
 
 
 			if (u8ReturnVal == 1U)

@@ -131,10 +131,33 @@ Lint16 s16AMC7812_I2C__WriteU16(Luint8 u8DeviceAddx, Luint8 u8RegisterAddx, Luin
 Lint16 s16AMC7812_I2C__ReadU16(Luint8 u8DeviceAddx, Luint8 u8RegAddx, Luint16 *pu16Value)
 {
 
-//	*pu16Value = 0U;
-//	return 0;
-//	Luint8 u8Array[2];
-	Lint16 s16Return = 0;
+	// declarations
+
+	Luint8 u8Array[2];
+	Lint16 s16Return;
+	union
+	{
+		Luint8 u8[2];
+		Luint16 u16;
+	}unT2;
+
+	s16Return = -1;
+
+	//read two bytes
+
+#ifndef WIN32
+	s16Return = s16RM4_I2C_USER__RxByteArray(u8DeviceAddx, u8RegAddx, &u8Array[0], 2U);
+
+	//Map
+	unT2.u8[1] = u8Array[0];
+	unT2.u8[0] = u8Array[1];
+	*pu16Value = unT2.u16;
+#else
+	//fake on win32
+	*pu16Value = 0U;
+	s16Return = 0;
+#endif
+
 
 	return s16Return;
 }

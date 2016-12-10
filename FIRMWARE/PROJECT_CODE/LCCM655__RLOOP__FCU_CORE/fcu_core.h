@@ -440,6 +440,10 @@
 		Lint16 s16FCU_THROTTLE__Hold(void);
 		void vFCU_THROTTLE__100MS_ISR(void);
 
+		// AMC7812 DAC
+
+		void vAMC7812__Process(void);
+
 
 	#endif //#if C_LOCALDEF__LCCM655__ENABLE_THIS_MODULE == 1U
 	//safetys
