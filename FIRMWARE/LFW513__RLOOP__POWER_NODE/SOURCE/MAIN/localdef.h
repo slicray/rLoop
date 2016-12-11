@@ -31,6 +31,7 @@ ETHERNET TRANSPORT
 		#define C_LOCALDEF__LCCM325__ENABLE_DHCP_CLIENT						(0U)
 		//Link Layer Discovery Protocol
 		#define C_LOCALDEF__LCCM325__ENABLE_LLDP							(0U)
+		#define C_LOCALDEF__LCCM325__ENABLE_SNMP							(0U)
 
 		//UDP Rx
 		#define C_LOCALDEF__LCCM325__UDP_RX_CALLBACK(buffer,length,dest_port)	vPWRNODE_NET_RX__RxUDP(buffer, length, dest_port)
@@ -270,19 +271,19 @@ RLOOP - POWER NODE CORE
 	#if C_LOCALDEF__LCCM653__ENABLE_THIS_MODULE == 1U
 
 		/** Enable or disable the PiComms layer */
-		#define C_LOCALDEF__LCCM653__ENABLE_PI_COMMS						(1U)
+		#define C_LOCALDEF__LCCM653__ENABLE_PI_COMMS						(0U)
 
 		/** Enable the battery temperature measurement system */
-		#define C_LOCALDEF__LCCM653__ENABLE_BATT_TEMP						(1U)
+		#define C_LOCALDEF__LCCM653__ENABLE_BATT_TEMP						(0U)
 
 		/** Enable the BMS Subsystem */
 		#define C_LOCALDEF__LCCM653__ENABLE_BMS								(0U)
 
 		/** Enable the PV temp system using TSYS01 */
-		#define C_LOCALDEF__LCCM653__ENABLE_NODE_TEMP						(1U)
+		#define C_LOCALDEF__LCCM653__ENABLE_NODE_TEMP						(0U)
 
 		/** Node pressure using MS5607 */
-		#define C_LOCALDEF__LCCM653__ENABLE_NODE_PRESS						(1U)
+		#define C_LOCALDEF__LCCM653__ENABLE_NODE_PRESS						(0U)
 
 		/** Enable the DC/DC converter subsystem */
 		#define C_LOCALDEF__LCCM653__ENABLE_DC_CONVERTER					(1U)

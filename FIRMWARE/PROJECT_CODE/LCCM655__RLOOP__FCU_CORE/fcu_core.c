@@ -28,7 +28,7 @@ struct _strFCU sFCU;
  * @brief
  * Init the FCU. Call this first thing.
  * 
- * @st_funcMD5		CC1CE932DF70839CDB882B5F32B8106A
+ * @st_funcMD5		2B87B49581828868F2B8726833317ADB
  * @st_funcID		LCCM655R0.FILE.000.FUNC.001
  */
 void vFCU__Init(void)
@@ -53,7 +53,7 @@ void vFCU__Init(void)
  * @brief
  * Process any FCU tasks.
  * 
- * @st_funcMD5		05CF3F7820A29ABF562E522CC9365071
+ * @st_funcMD5		92D4D90BE080ABD016BE3A72425C865F
  * @st_funcID		LCCM655R0.FILE.000.FUNC.002
  */
 void vFCU__Process(void)
@@ -107,6 +107,8 @@ void vFCU__Process(void)
 			//Setup the ADC
 			vRM4_ADC_USER__Init();
 
+			//CPU load monitoring
+			vRM4_CPULOAD__Init();
 
 			//change state
 			sFCU.eInitStates = INIT_STATE__INIT_IO;
@@ -134,45 +136,57 @@ void vFCU__Process(void)
 			vRM4_N2HET_PINS__Set_PinDirection_Input(N2HET_CHANNEL__1, 9U);
 			vRM4_N2HET_PINS__Set_PinDirection_Input(N2HET_CHANNEL__1, 22U);
 
-			//interrupts
-			//Channel A1, A2
+			//laser contrast sensors
+			vRM4_N2HET_PINS__Set_PinDirection_Input(N2HET_CHANNEL__1, 6U);
+			vRM4_N2HET_PINS__Set_PinDirection_Input(N2HET_CHANNEL__1, 7U);
+			vRM4_N2HET_PINS__Set_PinDirection_Input(N2HET_CHANNEL__1, 13U);
 
-				vRM4_N2HET__Disable(N2HET_CHANNEL__1);
+			//must disable N2HET before adding programs.
+			vRM4_N2HET__Disable(N2HET_CHANNEL__1);
 
-				#if C_LOCALDEF__LCCM655__ENABLE_PUSHER == 1U
-					//N2HET programs for the edge interrupts for pusher
-					sFCU.sPusher.sSwitches[0].u16N2HET_Prog = u16N2HET_PROG_DYNAMIC__Add_Edge(N2HET_CHANNEL__1, 4U, EDGE_TYPE__BOTH, 1U);
-					sFCU.sPusher.sSwitches[1].u16N2HET_Prog = u16N2HET_PROG_DYNAMIC__Add_Edge(N2HET_CHANNEL__1, 5U, EDGE_TYPE__BOTH, 1U);
-				#endif
+			#if C_LOCALDEF__LCCM655__ENABLE_PUSHER == 1U
+				//N2HET programs for the edge interrupts for pusher
+				sFCU.sPusher.sSwitches[0].u16N2HET_Prog = u16N2HET_PROG_DYNAMIC__Add_Edge(N2HET_CHANNEL__1, 4U, EDGE_TYPE__BOTH, 1U);
+				sFCU.sPusher.sSwitches[1].u16N2HET_Prog = u16N2HET_PROG_DYNAMIC__Add_Edge(N2HET_CHANNEL__1, 5U, EDGE_TYPE__BOTH, 1U);
+			#endif
 
-				//programs for right brake limit switches
-				#if C_LOCALDEF__LCCM655__ENABLE_BRAKES == 1U
-					sFCU.sBrakes[FCU_BRAKE__RIGHT].sLimits[BRAKE_SW__EXTEND].u16N2HET_Prog = u16N2HET_PROG_DYNAMIC__Add_Edge(N2HET_CHANNEL__1, 9U, EDGE_TYPE__BOTH, 1U);
-					sFCU.sBrakes[FCU_BRAKE__RIGHT].sLimits[BRAKE_SW__RETRACT].u16N2HET_Prog = u16N2HET_PROG_DYNAMIC__Add_Edge(N2HET_CHANNEL__1, 22U, EDGE_TYPE__BOTH, 1U);
-					sFCU.sBrakes[FCU_BRAKE__LEFT].sLimits[BRAKE_SW__EXTEND].u16N2HET_Prog = 0U;
-					sFCU.sBrakes[FCU_BRAKE__LEFT].sLimits[BRAKE_SW__RETRACT].u16N2HET_Prog = 0U;
-				#else
-					sFCU.sBrakes[FCU_BRAKE__RIGHT].sLimits[BRAKE_SW__EXTEND].u16N2HET_Prog = 0U;
-					sFCU.sBrakes[FCU_BRAKE__RIGHT].sLimits[BRAKE_SW__RETRACT].u16N2HET_Prog = 0U;
-					sFCU.sBrakes[FCU_BRAKE__LEFT].sLimits[BRAKE_SW__EXTEND].u16N2HET_Prog = 0U;
-					sFCU.sBrakes[FCU_BRAKE__LEFT].sLimits[BRAKE_SW__RETRACT].u16N2HET_Prog = 0U;
-				#endif
+			//programs for right brake limit switches
+			#if C_LOCALDEF__LCCM655__ENABLE_BRAKES == 1U
+				sFCU.sBrakes[FCU_BRAKE__RIGHT].sLimits[BRAKE_SW__EXTEND].u16N2HET_Prog = u16N2HET_PROG_DYNAMIC__Add_Edge(N2HET_CHANNEL__1, 9U, EDGE_TYPE__BOTH, 1U);
+				sFCU.sBrakes[FCU_BRAKE__RIGHT].sLimits[BRAKE_SW__RETRACT].u16N2HET_Prog = u16N2HET_PROG_DYNAMIC__Add_Edge(N2HET_CHANNEL__1, 22U, EDGE_TYPE__BOTH, 1U);
+				sFCU.sBrakes[FCU_BRAKE__LEFT].sLimits[BRAKE_SW__EXTEND].u16N2HET_Prog = 0U;
+				sFCU.sBrakes[FCU_BRAKE__LEFT].sLimits[BRAKE_SW__RETRACT].u16N2HET_Prog = 0U;
+			#else
+				sFCU.sBrakes[FCU_BRAKE__RIGHT].sLimits[BRAKE_SW__EXTEND].u16N2HET_Prog = 0U;
+				sFCU.sBrakes[FCU_BRAKE__RIGHT].sLimits[BRAKE_SW__RETRACT].u16N2HET_Prog = 0U;
+				sFCU.sBrakes[FCU_BRAKE__LEFT].sLimits[BRAKE_SW__EXTEND].u16N2HET_Prog = 0U;
+				sFCU.sBrakes[FCU_BRAKE__LEFT].sLimits[BRAKE_SW__RETRACT].u16N2HET_Prog = 0U;
+			#endif
 
-				vRM4_N2HET__Enable(N2HET_CHANNEL__1);
+			#if C_LOCALDEF__LCCM655__ENABLE_LASER_CONTRAST == 1U
 
-				#if C_LOCALDEF__LCCM655__ENABLE_BRAKES == 1U
-					//brake left inputs
-					vRM4_GIO__Set_BitDirection(gioPORTA, 0U, GIO_DIRECTION__INPUT);
-					vRM4_GIO__Set_BitDirection(gioPORTA, 1U, GIO_DIRECTION__INPUT);
+				//setup the contrast sensor programs
+				sFCU.sContrast.sSensors[LASER_CONT__FWD].u16N2HET_Index = u16N2HET_PROG_DYNAMIC__Add_Edge(N2HET_CHANNEL__1, 6U, EDGE_TYPE__RISING, 1U);
+				sFCU.sContrast.sSensors[LASER_CONT__MID].u16N2HET_Index = u16N2HET_PROG_DYNAMIC__Add_Edge(N2HET_CHANNEL__1, 7U, EDGE_TYPE__RISING, 1U);
+				sFCU.sContrast.sSensors[LASER_CONT__AFT].u16N2HET_Index = u16N2HET_PROG_DYNAMIC__Add_Edge(N2HET_CHANNEL__1, 13U, EDGE_TYPE__RISING, 1U);
+			#endif
 
-					//configure the interrupts
-					vRM4_GIO_ISR__Set_InterruptPolarity(GIO_POLARITY__BOTH, GIO_ISR_PIN__GIOA_0);
-					vRM4_GIO_ISR__Set_InterruptPolarity(GIO_POLARITY__BOTH, GIO_ISR_PIN__GIOA_1);
+			//once all the programs are added, enable the N2HET:1
+			vRM4_N2HET__Enable(N2HET_CHANNEL__1);
 
-					//setup the interrupts
-					vRM4_GIO_ISR__EnableISR(GIO_ISR_PIN__GIOA_0);
-					vRM4_GIO_ISR__EnableISR(GIO_ISR_PIN__GIOA_1);
-				#endif
+			#if C_LOCALDEF__LCCM655__ENABLE_BRAKES == 1U
+				//brake left inputs
+				vRM4_GIO__Set_BitDirection(gioPORTA, 0U, GIO_DIRECTION__INPUT);
+				vRM4_GIO__Set_BitDirection(gioPORTA, 1U, GIO_DIRECTION__INPUT);
+
+				//configure the interrupts
+				vRM4_GIO_ISR__Set_InterruptPolarity(GIO_POLARITY__BOTH, GIO_ISR_PIN__GIOA_0);
+				vRM4_GIO_ISR__Set_InterruptPolarity(GIO_POLARITY__BOTH, GIO_ISR_PIN__GIOA_1);
+
+				//setup the interrupts
+				vRM4_GIO_ISR__EnableISR(GIO_ISR_PIN__GIOA_0);
+				vRM4_GIO_ISR__EnableISR(GIO_ISR_PIN__GIOA_1);
+			#endif
 
 			sFCU.eInitStates = INIT_STATE__INIT_COMMS;
 			break;
@@ -315,6 +329,12 @@ void vFCU__Process(void)
 
 		case INIT_STATE__RUN:
 
+			//CPU load processing
+			vRM4_CPULOAD__Process();
+
+			//start of while entry point
+			vRM4_CPULOAD__While_Entry();
+
 			//Handle the ADC conversions
 			vRM4_ADC_USER__Process();
 
@@ -326,17 +346,22 @@ void vFCU__Process(void)
 			//process the main state machine
 			vFCU_MAINSM__Process();
 
+			//end of while loop
+			vRM4_CPULOAD__While_Exit();
+
 			break;
 
 	}//switch(sFCU.eInitStates)
 
 }
 
-
-
-
-
-//100ms timer
+/***************************************************************************//**
+ * @brief
+ * 100ms timer
+ * 
+ * @st_funcMD5		06B4A521A48891BB1E0C70746532CC66
+ * @st_funcID		LCCM655R0.FILE.000.FUNC.003
+ */
 void vFCU__RTI_100MS_ISR(void)
 {
 	#if C_LOCALDEF__LCCM655__ENABLE_PI_COMMS == 1U
@@ -347,12 +372,24 @@ void vFCU__RTI_100MS_ISR(void)
 	#endif
 }
 
-//10ms timer
+/***************************************************************************//**
+ * @brief
+ * 10ms timer
+ * 
+ * @st_funcMD5		132920CE083F2C05C9100CBC35DA7876
+ * @st_funcID		LCCM655R0.FILE.000.FUNC.004
+ */
 void vFCU__RTI_10MS_ISR(void)
 {
 
-	//tell the pusher interface about us.
-	vFCU_PUSHER__10MS_ISR();
+	#if C_LOCALDEF__LCCM655__ENABLE_ETHERNET == 1U
+		vFCU_NET_TX__10MS_ISR();
+	#endif
+
+	#if C_LOCALDEF__LCCM655__ENABLE_PUSHER == 1U
+		//tell the pusher interface about us.
+		vFCU_PUSHER__10MS_ISR();
+	#endif
 }
 
 #endif //#if C_LOCALDEF__LCCM655__ENABLE_THIS_MODULE == 1U

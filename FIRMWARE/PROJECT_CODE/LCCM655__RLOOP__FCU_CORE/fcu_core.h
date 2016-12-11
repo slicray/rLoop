@@ -11,7 +11,9 @@
 	#include <localdef.h>
 	#if C_LOCALDEF__LCCM655__ENABLE_THIS_MODULE == 1U
 
-		//state machine types
+		/*******************************************************************************
+		Includes
+		*******************************************************************************/
 		#include <LCCM655__RLOOP__FCU_CORE/fcu_core__types.h>
 		#include <LCCM655__RLOOP__FCU_CORE/fcu_core__defines.h>
 		#include <LCCM655__RLOOP__FCU_CORE/fcu_core__enums.h>
@@ -21,6 +23,12 @@
 		#include <LCCM655__RLOOP__FCU_CORE/BRAKES/fcu__brakes__fault_flags.h>
 		#include <LCCM655__RLOOP__FCU_CORE/ACCELEROMETERS/fcu__accel__fault_flags.h>
 
+		#include <LCCM655__RLOOP__FCU_CORE/ASI_RS485/fcu__asi_defines.h>
+		#include <LCCM655__RLOOP__FCU_CORE/ASI_RS485/fcu__asi_types.h>
+
+		#include <LCCM655__RLOOP__FCU_CORE/NETWORKING/fcu_core__net__packet_types.h>
+
+
 		//for software fault tree handling
 		#include <MULTICORE/LCCM284__MULTICORE__FAULT_TREE/fault_tree__public.h>
 
@@ -29,6 +37,12 @@
 		*******************************************************************************/
 		#define C_MLP__MAX_AVERAGE_SIZE				(8U)
 
+
+		// number of ASI commands waiting in queue
+		#define C_ASI__COMMAND_QUEUE				(8)
+
+		// max modbus frame size
+		#define C_ASI__MAX_FRAME_SIZE				(256)
 
 		/*******************************************************************************
 		Structures
@@ -41,6 +55,9 @@
 
 			/** The main state machine for run mode */
 			E_FCU__RUN_STATE_T eRunState;
+
+			/** Auto sequence state machine */
+			E_FCU__AUTO_SEQUENCE_STATE_T eAutoSeqState;
 
 			/** The init statemachine */
 			E_FCU__INIT_STATE_TYPES eInitStates;
@@ -274,6 +291,24 @@
 
 			}sLasers;
 
+			#if C_LOCALDEF__LCCM655__ENABLE_LASER_CONTRAST == 1U
+			/** Contrast sensor structure */
+			struct
+			{
+
+				/** Individual contrast senors */
+				struct
+				{
+
+					/** The N2HET program index */
+					Luint16 u16N2HET_Index;
+
+				}sSensors[LASER_CONT__MAX];
+
+			}sContrast;
+			#endif
+
+			#if C_LOCALDEF__LCCM655__ENABLE_ETHERNET == 1U
 			/** Ethernet comms structure */
 			struct
 			{
@@ -285,6 +320,52 @@
 
 			}sEthernet;
 
+
+			/** UDP diagnostics system */
+			struct
+			{
+
+				/** A flag to indicate 10ms has elapsed if we are using timed packets */
+				Luint8 u810MS_Flag;
+
+				/** The next packet type to transmit */
+				E_FCU_NET_PACKET_TYPES eTxPacketType;
+
+				/** If the user has enabled Tx streaming */
+				E_FCU_NET_PACKET_TYPES eTxStreamingType;
+
+
+			}sUDPDiag;
+			#endif
+
+			#if C_LOCALDEF__LCCM655__ENABLE_ASI_RS485 == 1U
+			/** ASI Comms Layer */
+			struct
+			{
+				/** the modbus state */
+				E_FCU_MODBUS__STATE_T eMbState;
+
+				/** a circular queue of modbus commands to ASI devices */
+				struct _strASICmd cmdQueue[C_ASI__COMMAND_QUEUE];
+
+				/** command queue head index*/
+				Lint8 qHead;
+
+				/** command queue tail index*/
+				Lint8 qTail;
+
+				/** a set of timers to control tx timeouts */
+				Luint64 timeout_3_5_char;
+				Luint64 timeout_1_5_char;
+				Luint64 timeout_response;
+				Luint64 timeout_turnaround;
+				Luint64 timer_3_5_char_start;
+				Luint64 timer_1_5_char_start;
+				Luint64 timer_response_start;
+				Luint64 timer_turnaround_start;
+
+			}sASIComms;
+			#endif
 
 			/** Structure guard 2*/
 			Luint32 u32Guard2;
@@ -307,15 +388,37 @@
 		void vFCU_NET_RX__RxUDP(Luint8 * pu8Buffer, Luint16 u16Length, Luint16 u16DestPort);
 		void vFCU_NET_RX__RxSafeUDP(Luint8 *pu8Payload, Luint16 u16PayloadLength, Luint16 ePacketType, Luint16 u16DestPort, Luint16 u16Fault);
 
+			//transmit
+			void vFCU_NET_TX__Init(void);
+			void vFCU_NET_TX__Process(void);
+			void vFCU_NET_TX__10MS_ISR(void);
+
 		//fault handling layer
 		void vFCU_FAULTS__Init(void);
 		void vFCU_FAULTS__Process(void);
 		Luint8 u8FCU_FAULTS__Get_IsFault(void);
 		Luint32 u32FCU_FAULTS__Get_FaultFlags(void);
 
+		//laser contrast sensors
+		void vFCU_LASERCONT__Init(void);
+		void vFCU_LASERCONT__Process(void);
+		void vFCU_LASERCONT__ISR(E_FCU__LASER_CONT_INDEX_T eLaser);
+
+		//Laser distance
+		void vFCU_LASERDIST__Init(void);
+		void vFCU_LASERDIST__Process(void);
+
+
 		//main state machine
 		void vFCU_MAINSM__Init(void);
 		void vFCU_MAINSM__Process(void);
+
+			//auto sequence
+			void vFCU_MAINSM_AUTO__Init(void);
+			void vFCU_MAINSM_AUTO__Process(void);
+			Luint8 u8FCU_MAINSM_AUTO__Is_Busy(void);
+			Luint8 u8FCU_MAINSM_AUTO__Is_Abort(void);
+
 
 		//lasers for OptoNCDT inerface
 		void vFCU_LASEROPTO__Init(void);
@@ -364,6 +467,7 @@
 		void vFCU_ACCEL__Process(void);
 		Lint16 s16FCU_ACCEL__Get_LastSample(Luint8 u8Index, Luint8 u8Axis);
 		Lfloat32 f32FCU_ACCEL__Get_LastG(Luint8 u8Index, Luint8 u8Axis);
+		void vFCU_ACCEL_ETH__Transmit(E_FCU_NET_PACKET_TYPES ePacketType);
 
 		//Pusher interface
 		void vFCU_PUSHER__Init(void);

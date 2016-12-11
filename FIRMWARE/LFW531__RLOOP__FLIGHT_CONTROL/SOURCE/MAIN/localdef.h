@@ -30,6 +30,7 @@ ETHERNET TRANSPORT
 		#define C_LOCALDEF__LCCM325__ENABLE_DHCP_CLIENT						(0U)
 		//Link Layer Discovery Protocol
 		#define C_LOCALDEF__LCCM325__ENABLE_LLDP							(0U)
+		#define C_LOCALDEF__LCCM325__ENABLE_SNMP							(0U)
 
 		//UDP Rx
 		#define C_LOCALDEF__LCCM325__UDP_RX_CALLBACK(buffer,length,dest_port)	vFCU_NET_RX__RxUDP(buffer, length, dest_port)
@@ -138,6 +139,12 @@ RLOOP - FLIGHT CONTROL UNIT - CORE
 
 		/** Number of OptoNCDT lasers, must be in order from A0:2, B0:2*/
 		#define C_LOCALDEF__LCCM655__NUM_LASER_OPTONCDT						(3U)
+
+		/** Enable the Laser contrast sensors */
+		#define C_LOCALDEF__LCCM655__ENABLE_LASER_CONTRAST					(1U)
+
+		/** Laser Distance Unit */
+		#define C_LOCALDEF__LCCM655__ENABLE_LASER_DISTANCE					(1U)
 
 		/** Enable accel subsystem */
 		#define C_LOCALDEF__LCCM655__ENABLE_ACCEL							(1U)

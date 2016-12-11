@@ -2,6 +2,31 @@
 #ifndef RLOOP_LCCM655__RLOOP__FCU_CORE_FCU_CORE__TYPES_H_
 #define RLOOP_LCCM655__RLOOP__FCU_CORE_FCU_CORE__TYPES_H_
 
+	/** ASI communication (modbus client) states */
+	typedef enum
+	{
+		/** Initial state */
+		ASI_COMM_STATE__INITIAL = 0u,
+
+		/** Idle state */
+		ASI_COMM_STATE__IDLE = 1u,
+
+		/** Transmit to all slaves */
+		ASI_COMM_STATE__BROADCAST_EMISSION = 2u,
+
+		/** Transmit to a specific slave */
+		ASI_COMM_STATE__UNICAST_EMISSION = 3u,
+
+		/** Receive state */
+		ASI_COMM_STATE__RECEPTION = 4u,
+
+		/** Process reply or error */
+		ASI_COMM_STATE__CONTROL_AND_WAIT = 5u
+
+	} E_FCU_MODBUS__STATE_T;
+
+
+
 	/** Run state types */
 	typedef enum
 	{
@@ -14,11 +39,33 @@
 		/** Run the flight computer in startup, do any diagnostics, etc*/
 		RUN_STATE__STARTUP_MODE,
 
+		/** in this mode the pod takes care of its functional tests as a terminal countdown */
+		RUN_STATE__AUTO_SEQUENCE_MODE,
+
 		/** Run the flight computer in flight mode*/
 		RUN_STATE__FLIGHT_MODE,
 
+		/** we have aborted flight, need to cleanup systems, landing gear and safe the pod */
+		RUN_STATE__FLIGHT_ABORT,
+
 
 	}E_FCU__RUN_STATE_T;
+
+
+	/** Auto sequence functional mode cheks */
+	typedef enum
+	{
+		/** Come out of reset and handle any startup tasks*/
+		AUTOSEQ_STATE__RESET = 0U,
+
+		/** Doing nothing, return here when idle */
+		AUTOSEQ_STATE__IDLE,
+
+		AUTOSEQ_STATE__TEST_FUNCTION_X,
+
+
+	}E_FCU__AUTO_SEQUENCE_STATE_T;
+
 
 
 	/** Opto NCDT Laser processing subsystem state machine */

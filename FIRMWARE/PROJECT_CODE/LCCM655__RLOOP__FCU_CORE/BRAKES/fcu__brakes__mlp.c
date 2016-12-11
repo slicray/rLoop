@@ -128,9 +128,11 @@ void vFCU_BRAKES_MLP__Init(void)
 		vFAULTTREE__Set_Flag(&sFCU.sBrakes[1].sFaultFlags, C_LCCM655__BRAKES__FAULT_INDEX__03);
 
 
+
 	}//else if(u8Test == 1U)
 
-
+	//now that we are ready, start the conversions.
+	vRM4_ADC_USER__StartConversion();
 }
 
 /***************************************************************************//**
@@ -211,46 +213,56 @@ void vFCU_BRAKES_MLP__Process(void)
  */
 void vFCU_BRAKES_MLP__Sample_ADC(E_FCU__BRAKE_INDEX_T eBrake)
 {
+	Luint8 u8New;
 
-
-
-	//determine the brake index
-	switch(eBrake)
+	//check the ADC converter process
+	u8New = u8RM4_ADC_USER__Is_NewDataAvailable();
+	if(u8New == 1U)
 	{
 
-		case FCU_BRAKE__LEFT:
-			//read from the ADC channel 0
-			sFCU.sBrakes[(Luint32)FCU_BRAKE__LEFT].sMLP.u16ADC_Sample = u16RM4_ADC_USER__Get_RawData(0U);
-			if (sFCU.sBrakes[(Luint32)FCU_BRAKE__LEFT].sMLP.u16ADC_Sample > sFCU.sBrakes[(Luint32)FCU_BRAKE__LEFT].sMLP.highest_value) {
-				sFCU.sBrakes[(Luint32)FCU_BRAKE__LEFT].sMLP.highest_value = sFCU.sBrakes[(Luint32)FCU_BRAKE__LEFT].sMLP.u16ADC_Sample;
-			}
-			// sometimes sample hits 0 but isn't a real value, throw it out
-			if (sFCU.sBrakes[(Luint32)FCU_BRAKE__LEFT].sMLP.u16ADC_Sample < sFCU.sBrakes[(Luint32)FCU_BRAKE__LEFT].sMLP.lowest_value && sFCU.sBrakes[(Luint32)FCU_BRAKE__LEFT].sMLP.u16ADC_Sample != 0U) {
-				sFCU.sBrakes[(Luint32)FCU_BRAKE__LEFT].sMLP.lowest_value = sFCU.sBrakes[(Luint32)FCU_BRAKE__LEFT].sMLP.u16ADC_Sample;
-			}
-			break;
+		//determine the brake index
+		switch(eBrake)
+		{
 
-		case FCU_BRAKE__RIGHT:
-			//read from the ADC channel 1
-			sFCU.sBrakes[(Luint32)FCU_BRAKE__RIGHT].sMLP.u16ADC_Sample = u16RM4_ADC_USER__Get_RawData(1U);
-			if (sFCU.sBrakes[(Luint32)FCU_BRAKE__RIGHT].sMLP.u16ADC_Sample > sFCU.sBrakes[(Luint32)FCU_BRAKE__RIGHT].sMLP.highest_value) {
-				sFCU.sBrakes[(Luint32)FCU_BRAKE__RIGHT].sMLP.highest_value = sFCU.sBrakes[(Luint32)FCU_BRAKE__RIGHT].sMLP.u16ADC_Sample;
-			}
-			// sometimes sample hits 0 but isn't a real value, throw it out
-			if (sFCU.sBrakes[(Luint32)FCU_BRAKE__RIGHT].sMLP.u16ADC_Sample < sFCU.sBrakes[(Luint32)FCU_BRAKE__RIGHT].sMLP.lowest_value && sFCU.sBrakes[(Luint32)FCU_BRAKE__RIGHT].sMLP.u16ADC_Sample != 0U) {
-				sFCU.sBrakes[(Luint32)FCU_BRAKE__RIGHT].sMLP.lowest_value = sFCU.sBrakes[(Luint32)FCU_BRAKE__RIGHT].sMLP.u16ADC_Sample;
-			}
-			break;
+			case FCU_BRAKE__LEFT:
+				//read from the ADC channel 0
+				sFCU.sBrakes[(Luint32)FCU_BRAKE__LEFT].sMLP.u16ADC_Sample = u16RM4_ADC_USER__Get_RawData(0U);
+				if (sFCU.sBrakes[(Luint32)FCU_BRAKE__LEFT].sMLP.u16ADC_Sample > sFCU.sBrakes[(Luint32)FCU_BRAKE__LEFT].sMLP.highest_value) {
+					sFCU.sBrakes[(Luint32)FCU_BRAKE__LEFT].sMLP.highest_value = sFCU.sBrakes[(Luint32)FCU_BRAKE__LEFT].sMLP.u16ADC_Sample;
+				}
+				// sometimes sample hits 0 but isn't a real value, throw it out
+				if (sFCU.sBrakes[(Luint32)FCU_BRAKE__LEFT].sMLP.u16ADC_Sample < sFCU.sBrakes[(Luint32)FCU_BRAKE__LEFT].sMLP.lowest_value && sFCU.sBrakes[(Luint32)FCU_BRAKE__LEFT].sMLP.u16ADC_Sample != 0U) {
+					sFCU.sBrakes[(Luint32)FCU_BRAKE__LEFT].sMLP.lowest_value = sFCU.sBrakes[(Luint32)FCU_BRAKE__LEFT].sMLP.u16ADC_Sample;
+				}
+				break;
 
-
-		default:
-			//todo, log the error.
-			break;
-
-	}//switch(eBrake)
+			case FCU_BRAKE__RIGHT:
+				//read from the ADC channel 1
+				sFCU.sBrakes[(Luint32)FCU_BRAKE__RIGHT].sMLP.u16ADC_Sample = u16RM4_ADC_USER__Get_RawData(1U);
+				if (sFCU.sBrakes[(Luint32)FCU_BRAKE__RIGHT].sMLP.u16ADC_Sample > sFCU.sBrakes[(Luint32)FCU_BRAKE__RIGHT].sMLP.highest_value) {
+					sFCU.sBrakes[(Luint32)FCU_BRAKE__RIGHT].sMLP.highest_value = sFCU.sBrakes[(Luint32)FCU_BRAKE__RIGHT].sMLP.u16ADC_Sample;
+				}
+				// sometimes sample hits 0 but isn't a real value, throw it out
+				if (sFCU.sBrakes[(Luint32)FCU_BRAKE__RIGHT].sMLP.u16ADC_Sample < sFCU.sBrakes[(Luint32)FCU_BRAKE__RIGHT].sMLP.lowest_value && sFCU.sBrakes[(Luint32)FCU_BRAKE__RIGHT].sMLP.u16ADC_Sample != 0U) {
+					sFCU.sBrakes[(Luint32)FCU_BRAKE__RIGHT].sMLP.lowest_value = sFCU.sBrakes[(Luint32)FCU_BRAKE__RIGHT].sMLP.u16ADC_Sample;
+				}
+				break;
 
 
-	//todo: Check the ADC for the most recent sample.
+			default:
+				//todo, log the error.
+				break;
+
+		}//switch(eBrake)
+
+		//taken the data now
+		vRM4_ADC_USER__Clear_NewDataAvailable();
+	}
+	else
+	{
+		//no new ADC, don't do anything
+	}
+
 
 
 }
