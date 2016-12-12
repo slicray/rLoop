@@ -87,7 +87,7 @@ Lint16 s16AMC7812_I2C__WriteU16(Luint8 u8DeviceAddx, Luint8 u8RegisterAddx, Luin
 	Luint8 u8Array[2];
 	Luint8 u8ArrayLength;
 	Lint16 s16Return;
-
+	Luint8 *pu8ArrayPtr;
 	union
 	{
 		Luint8 u8[2];
@@ -108,6 +108,9 @@ Lint16 s16AMC7812_I2C__WriteU16(Luint8 u8DeviceAddx, Luint8 u8RegisterAddx, Luin
 	u8ArrayLength = 2U;
 	s16Return = -1;
 	s16Return = s16RM4_I2C_USER__TxByteArray(u8DeviceAddx, u8RegisterAddx, &u8Array[0], u8ArrayLength);
+
+	//pu8ArrayPtr = &u8Array[0];
+	//s16Return = s16RM4_I2C_USER__TxByteArray(u8DeviceAddx, u8RegisterAddx, pu8ArrayPtr, u8ArrayLength);
 
 #else
 	//fake on win32
@@ -134,6 +137,7 @@ Lint16 s16AMC7812_I2C__ReadU16(Luint8 u8DeviceAddx, Luint8 u8RegAddx, Luint16 *p
 	// declarations
 
 	Luint8 u8Array[2];
+	Luint8 u8ArrayLength;
 	Lint16 s16Return;
 	union
 	{
@@ -146,7 +150,10 @@ Lint16 s16AMC7812_I2C__ReadU16(Luint8 u8DeviceAddx, Luint8 u8RegAddx, Luint16 *p
 	//read two bytes
 
 #ifndef WIN32
-	s16Return = s16RM4_I2C_USER__RxByteArray(u8DeviceAddx, u8RegAddx, &u8Array[0], 2U);
+
+	u8ArrayLength = 2U;
+
+	s16Return = s16RM4_I2C_USER__RxByteArray(u8DeviceAddx, u8RegAddx, &u8Array[0], 	u8ArrayLength);
 
 	//Map
 	unT2.u8[1] = u8Array[0];

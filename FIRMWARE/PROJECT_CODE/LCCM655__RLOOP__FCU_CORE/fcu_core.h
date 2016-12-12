@@ -323,7 +323,7 @@
 				Luint16 u16maxRunModeStandbySpeed;
 
 				// Throttle command values:
-				// [0] contains a command for all HEs, [1] - [8] contain commands for individual HEs
+				// use [0] to command all HEs, use [1] - [8] for commands to individual HEs
 				Luint16 u16ThrottleCommands[9];
 
 				// Number of the HE being given a command:

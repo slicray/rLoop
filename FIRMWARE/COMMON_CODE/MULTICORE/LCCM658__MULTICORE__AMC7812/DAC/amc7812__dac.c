@@ -117,7 +117,7 @@ Luint16 vAMC7812_DAC__Process(void)
 				vRM4_N2HET_PINS__Set_PinHigh(N2HET_CHANNEL__1, RM48_N2HET1_PIN__AMC7812_HW_RESET);
 				//vRM4_N2HET_PINS__Set_Pin(N2HET_CHANNEL__1, u32Bit, u32Value);
 
-				vRM4_DELAYS__Delay_uS(100U);
+				vRM4_DELAYS__Delay_uS(1000U);
 			}
 			else
 			{
@@ -128,11 +128,11 @@ Luint16 vAMC7812_DAC__Process(void)
 
 			vRM4_N2HET_PINS__Set_PinLow(N2HET_CHANNEL__1, RM48_N2HET1_PIN__AMC7812_HW_RESET);
 
-			vRM4_DELAYS__Delay_uS(100U);
+			vRM4_DELAYS__Delay_uS(1000U);
 
 			vRM4_N2HET_PINS__Set_PinHigh(N2HET_CHANNEL__1, RM48_N2HET1_PIN__AMC7812_HW_RESET);
 
-			vRM4_DELAYS__Delay_uS(100U);
+			vRM4_DELAYS__Delay_uS(1000U);
 
 			// check the value of the pin
 
@@ -141,6 +141,7 @@ Luint16 vAMC7812_DAC__Process(void)
 			// check the device address
 
 			s16Return = s16AMC7812_I2C__ReadU16(C_LOCALDEF__LCCM658__BUS_ADDX, AMC7812_REG_ADR__DEV_ID, &u16DeviceIDAddr);
+			//s16Return = s16AMC7812_I2C__ReadU16(0x61, AMC7812_REG_ADR__DEV_ID, &u16DeviceIDAddr);
 
 
 			if (u8ReturnVal == 1U)
@@ -151,6 +152,15 @@ Luint16 vAMC7812_DAC__Process(void)
 				u16PowerDownRegBitValues = 0x1FFE;
 
 				s16Return = s16AMC7812_I2C__WriteU16(C_LOCALDEF__LCCM658__BUS_ADDX, AMC7812_REG_ADR__PWR_DWN, u16PowerDownRegBitValues);
+
+				// set the DAC gain
+
+				strAMC7812_DAC.u16Gain = ;
+
+				// set Vref value
+
+				strAMC7812_DAC.u16Vref = ;
+
 
 				// reset successful, change state
 
@@ -219,7 +229,8 @@ Lint16 s16AMC7812_DAC__SetPinVoltage(void)
 
 	f32ConversionFactor = (Lfloat32)(u16MaxVolts - u16MinVolts)/(Lfloat32)(u16MaxCommandValue - u16MinCommandValue);
 
-	// Compute required voltage
+	// Compute required voltage:
+	// 		The output voltage is Input * Gain * Vref / 2^12
 
 	u16OutputVolts = (Luint16)(u16Command * f32ConversionFactor);
 
@@ -241,6 +252,10 @@ Lint16 s16AMC7812_DAC__SetPinVoltage(void)
 		}
 	}
 
+	// compute the integer value to get the desired voltage output
+
+	f32temp = (Lfloat32)( u16OutputVolts * 4096U) / (Lfoat32)( u16DACGain * u16DACVref );
+	u16DACInput = (Luint16)f32temp;
 
 	// initialize return flag
 
@@ -248,7 +263,7 @@ Lint16 s16AMC7812_DAC__SetPinVoltage(void)
 
 	// call I2C write function
 
-	s16Return = s16AMC7812_I2C__WriteU16(C_LOCALDEF__LCCM658__BUS_ADDX, u8RegAddr, u16OutputVolts);
+	s16Return = s16AMC7812_I2C__WriteU16(C_LOCALDEF__LCCM658__BUS_ADDX, u8RegAddr, u16DACInput);
 
 	if(s16Return >= 0)
 	{

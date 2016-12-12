@@ -146,6 +146,14 @@
 
 			Luint8 u8DACRegAddr;
 
+			// DAC Gain
+
+			Luint16 u16Gain;
+
+			// DAC Vref
+
+			Luint16	u16Vref;
+
 		};
 
 		struct _strAMC7812_DAC strAMC7812_DAC;
